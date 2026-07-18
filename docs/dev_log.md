@@ -61,3 +61,15 @@ This maps onto `roadmap.md`'s M0–M4 milestones; passes 18-20 begin reaching in
 **Files added:** `project.godot`, `.gitignore`, `.gitattributes`, `docs/ENGINE_VERSION`, `.github/workflows/ci.yml`, `src/core/{fixed_math,prng,event_bus,world_query,predicate}.gd`, `tests/framework/{test_case,test_runner,mock_world_query}.gd`, `tests/run_tests.gd`, `tests/unit/{test_fixed_math,test_prng,test_event_bus,test_predicate_evaluate,test_predicate_validate}.gd`.
 
 **Files changed:** `README.md` (title, status, test-running instructions), `docs/master_plan.md` (title, §12 risk resolved), `docs/tech_guidelines.md` (§12 amendment log: test harness decision, title decision), `docs/roadmap.md` (M0 checkboxes updated).
+
+**Post-push CI verification (the loop this whole approach depends on):** first real CI run ([run 29654915740](https://github.com/DanielDmas/Afterimage/actions/runs/29654915740)) came back **lint: pass, test: fail** — checked via the GitHub Actions API, not assumed. The good news first: `gdlint`/`gdformat --check` passing for real on GitHub's infrastructure confirms the local `gdtoolkit` run in this pass was meaningful, not just theater. The failure was real and unrelated to any of the PRNG/overflow risk called out above — it was simpler and more fundamental:
+
+```
+SCRIPT ERROR: Parse Error: Could not find type "AfterimageTestRunner" in the current scope.
+  at: GDScript::reload (res://tests/run_tests.gd:11)
+```
+
+**Root cause:** `.godot/` (Godot's project-scan cache, which is where global `class_name` → script-path resolution gets recorded) is correctly gitignored — it's a local editor artifact, not something to commit. But that means on a genuinely fresh checkout, Godot hasn't scanned the project yet, so none of this pass's `class_name` globals (`AfterimageTestRunner`, `FixedMath`, `Xoshiro128StarStar`, etc.) are resolvable the moment `--script res://tests/run_tests.gd` tries to parse a reference to one. Opening a project in the editor UI triggers this scan invisibly and automatically; running a script directly via `--headless --script` does not.
+
+**Fix:** added an explicit one-time import pass — `godot --headless --path . --editor --quit` — before running the test script, in both `.github/workflows/ci.yml` and the README's local instructions. This forces the same project scan the editor would do on first open, without needing a display. Its own exit code is treated as non-authoritative (`|| true`) since a benign warning can make that pass itself report nonzero; the test-running step right after it is what actually gates the build, and it now starts from a warm class-name cache. This is exactly the verification loop described as the plan for this pass: something unverifiable locally (real Godot script-loading behavior on a cold checkout) surfaced through real CI, got diagnosed from the actual error text rather than guessed at, and was fixed forward in the same pass rather than discovered later.
+

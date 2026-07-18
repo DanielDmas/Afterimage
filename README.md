@@ -8,11 +8,12 @@ Top-down 2D action thriller (Godot 4.3). You are an undercover officer inside a 
 **Status:** in development. Planning is complete and ratified (docs below); engineering is underway — see `docs/dev_log.md` for pass-by-pass progress and `docs/roadmap.md` for the milestone backlog. Nothing is decided on the go: every system is built to the locked specs in the document set.
 
 ## Running the tests
-This is a Godot 4.3.x project (`docs/ENGINE_VERSION` pins the exact build). With the editor installed:
+This is a Godot 4.3.x project (`docs/ENGINE_VERSION` pins the exact build). On a **fresh clone**, run an import pass once first — `.godot/` (the class-name cache Godot builds by scanning the project) is gitignored, so `class_name` types like `AfterimageTestRunner` aren't resolvable until something triggers that scan:
 ```
+godot --headless --path . --editor --quit   # one-time: builds the class cache
 godot --headless --path . --script res://tests/run_tests.gd
 ```
-Exit code 0 = all tests passed. CI (`.github/workflows/ci.yml`) runs this on every push, plus `gdlint`/`gdformat --check` for style. See `docs/tech_guidelines.md` §9 and §12 for why this project uses a small custom GDScript test harness (`tests/framework/`) instead of GUT for now.
+(Opening the project in the editor UI at least once does the same thing — the explicit command above is just the headless/CI equivalent.) Exit code 0 from the second command = all tests passed. CI (`.github/workflows/ci.yml`) runs both steps on every push, plus `gdlint`/`gdformat --check` for style. See `docs/tech_guidelines.md` §9 and §12 for why this project uses a small custom GDScript test harness (`tests/framework/`) instead of GUT for now.
 
 ## The document set
 

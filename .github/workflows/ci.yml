@@ -45,6 +45,18 @@ jobs:
           echo "---"
           "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" --headless --version
 
+      - name: Import project (builds the global class_name cache)
+        # A fresh checkout has no .godot/ import cache (it's gitignored, as it
+        # should be), so class_name globals like AfterimageTestRunner aren't
+        # resolvable yet — Godot only registers them after scanning the
+        # project once. --editor --quit does exactly that scan/import pass
+        # without opening a display. The exit code from this pass is not
+        # meaningful (a benign warning can make it nonzero); the next step is
+        # what actually verifies anything, and it starts from a warm cache.
+        run: |
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" \
+            --headless --path . --editor --quit || true
+
       - name: Run unit test suite
         run: |
           set -euo pipefail
