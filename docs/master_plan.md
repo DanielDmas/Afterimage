@@ -2,8 +2,17 @@
 ### A psychological action thriller about a mind you cannot trust — including yours
 **Document type:** Full design + technical architecture + production plan (pre-production, expanded edition)
 **Document status:** v2.0 — expanded to a standalone master development plan. Supersedes v1.
-**Relationship to Plan 01 (*The Quiet Ledger*):** Design reference and shared-universe bible **only**. That game will not be built. Every system this document once planned to import from Plan 01's codebase is now planned, specced, and scheduled **inside this project** (§5.7, §9). *Afterimage* plays, and is built, completely standalone.
+**Relationship to Plan 01 (*The Quiet Ledger*):** Design reference and shared-universe bible **only**. That game will not be built, and its planning document has been removed from the repo — every design it contributed is restated standalone in `foundation_blueprints.md`. All systems are planned, specced, and scheduled **inside this project** (§5.7, §9). *Afterimage* plays, and is built, completely standalone.
 **No code in this document — design, architecture, and production planning only.**
+
+**Document map (the complete pre-production set — nothing is decided on the go):**
+| File | Contents |
+|---|---|
+| `docs/master_plan.md` (this file) | Design, systems, narrative, architecture, production plan |
+| `docs/tech_guidelines.md` | **Locked technology decisions** (engine, determinism contract, formats, budgets, CI) with change control |
+| `docs/foundation_blueprints.md` | Full spec of the foundation layer (EventBus, state store, predicate language, dialogue DSL, NPC minds, claims, tooling) |
+| `docs/art_direction.md` | Visual identity, beauty standards, VFX grammar, typography, motion |
+| `docs/ux_charter.md` | Player-experience pillars, onboarding contract, QoL inventory, enjoyability metrics |
 
 ---
 
@@ -59,6 +68,7 @@ These are the disciplines we hold ourselves to for the whole production, stated 
 3. **Missions must be fun sober.** A mission that isn't good with distortions off is rejected (§6.2).
 4. **Content is data.** No mission logic in engine code; everything authored flows through validated content packages (§5.2, §5.8).
 5. **Accessibility and psychological safety are features with owners and milestones**, not a pre-ship checklist (§4.16, §9).
+6. **Nothing is decided on the go.** Technology choices are locked in `tech_guidelines.md` under change control; beauty is specified in `art_direction.md`; player-friendliness is specified, with pass/fail targets, in `ux_charter.md`. When a question comes up mid-build, the answer is looked up — or the governing document is formally amended at a milestone boundary.
 
 ---
 
@@ -360,8 +370,8 @@ Utility-scored behaviors over small state (patrol/investigate/engage/flee/report
 ### 5.6 Performance Notes
 Top-down 2D with lighting: comfortably within budget. Watchpoints: percept-layer double bookkeeping (design ops as render-side decorators, not entity clones), replay re-sim speed for theater scrubbing (checkpoint snapshots every N seconds of log), audio voice count during distortion-heavy scenes, document/portrait texture memory in hub screens (lazy-load).
 
-### 5.7 Inheritance Ledger (what the Plan 01 *document* pays forward)
-Plan 01's game is shelved; its designs are this project's blueprints. **Everything below is built inside Afterimage, on Afterimage's calendar (§9) — no external code dependency exists.**
+### 5.7 Inheritance Ledger (what the Plan 01 *document* paid forward)
+Plan 01's game is shelved; its useful designs have been extracted, restated standalone, and adapted for this game in **`foundation_blueprints.md`** — the single source for these specs (the Plan 01 document itself is gone from the repo). **Everything below is built inside Afterimage, on Afterimage's calendar (§9) — no external dependency of any kind exists.**
 - **Built to Plan 01's spec, as designed there:** EventBus (typed pub/sub; every mutation is an event), GameStateStore (single serializable source of truth), Predicate language + evaluator (+ its test discipline), versioned save format, dialogue DSL + compiler + runner (stances, guards, claim-grants/listeners, localization keys auto-derived), claims/provenance concept, NPC mind schema, gossip propagation.
 - **Adapted:** gossip → suspicion ledger (§4.7); claims → debrief honesty modes (§4.10); Plan 01's Case Validator concept → our fairness auditor + deck/mission validator (§10); its headless playthrough simulator → our bot rigs (§10).
 - **Genuinely new to Afterimage:** TruthSim/percept split, DistortionOps + Director, MindModel, real-time combat + AI, WitnessSystem, replay Theater.
@@ -389,7 +399,8 @@ The honest accounting: roughly **40% of Afterimage's core is pre-designed** — 
   loc/                    # localization tables (externalized from day one)
 /tools/                   # validators, fairness auditor, DSL compiler, bots
 /tests/                   # unit + determinism corpus (recorded runs)
-/docs/                    # this plan, story bible, mission ground-truth docs
+/docs/                    # the document set (see map in header), story bible,
+                          # mission ground-truth docs, ENGINE_VERSION, pipelines/
 ```
 Conventions: content is data (JSON/DSL/text), reviewed as diffs; images via LFS; GDScript style guide + static typing enforced by CI lint; every system lands with its unit tests or its determinism-corpus entry (definition of done, §10).
 
