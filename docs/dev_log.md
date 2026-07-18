@@ -141,3 +141,5 @@ The one failure was a test bug, not a system bug: `test_save_and_load_round_trip
 **Files added:** `src/sim/{line_of_sight,sound_graph}.gd`, `tests/unit/{test_line_of_sight,test_sound_graph}.gd`.
 
 **Files changed:** `docs/roadmap.md` (M1 LOS/sound-propagation item checked off with scope notes).
+
+**Confirmed green** ([run 29665845419](https://github.com/DanielDmas/Afterimage/actions/runs/29665845419), commit `b5b15a2`): both jobs `success`, test log reads `ALL PASSED (176/176)`. All 14 `test_line_of_sight.gd` cases passed (including the negative-direction and reversed-direction Bresenham cases) and all 12 `test_sound_graph.gd` cases passed (including the loudest-path-wins-over-a-shorter-noisier-route relaxation test). `gdlint`/`gdformat --check` clean on GitHub's infrastructure. **Pass 4 is closed.**
