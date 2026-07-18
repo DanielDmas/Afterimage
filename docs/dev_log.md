@@ -73,3 +73,11 @@ SCRIPT ERROR: Parse Error: Could not find type "AfterimageTestRunner" in the cur
 
 **Fix:** added an explicit one-time import pass — `godot --headless --path . --editor --quit` — before running the test script, in both `.github/workflows/ci.yml` and the README's local instructions. This forces the same project scan the editor would do on first open, without needing a display. Its own exit code is treated as non-authoritative (`|| true`) since a benign warning can make that pass itself report nonzero; the test-running step right after it is what actually gates the build, and it now starts from a warm class-name cache. This is exactly the verification loop described as the plan for this pass: something unverifiable locally (real Godot script-loading behavior on a cold checkout) surfaced through real CI, got diagnosed from the actual error text rather than guessed at, and was fixed forward in the same pass rather than discovered later.
 
+**Confirmed green** ([run 29655073102](https://github.com/DanielDmas/Afterimage/actions/runs/29655073102), commit `a788729`): both jobs `success`. Pulled the actual test-step log text rather than trusting the exit code alone —
+```
+Afterimage test run — 5 suite(s), 67 test(s), 6849 assertion(s)
+...
+ALL PASSED (67/67)
+```
+— and `gdlint`/`gdformat --check` both clean on GitHub's own infrastructure, matching the local run byte-for-byte. **Pass 1 is closed.** One cosmetic, non-blocking note from the same log for the record: Godot prints `WARNING: ObjectDB instances leaked at exit` / `ERROR: 3 resources still in use at exit` after the test report but before process exit — harmless in a one-shot CLI runner that terminates immediately after (the OS reclaims everything), and it does not affect the exit code (`quit(0 if report.all_passed() else 1)` still returned 0). Worth a look with `--verbose` if a future pass wants zero engine noise in the log, but not worth chasing now.
+
