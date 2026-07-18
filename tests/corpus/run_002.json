@@ -1,0 +1,15 @@
+{
+	"replay_version": 1,
+	"run_seed": 2002,
+	"content_version": "corpus-v0-fixture-2",
+	"frames": [
+		{"tick": 1, "inputs": {"move_x": 1, "move_y": 1}},
+		{"tick": 2, "inputs": {"move_x": 1, "move_y": 1, "roll": true}},
+		{"tick": 3, "inputs": {"move_x": 1, "move_y": 1}},
+		{"tick": 4, "inputs": {"move_x": 0, "move_y": 0, "roll": true}},
+		{"tick": 5, "inputs": {"move_x": -1, "move_y": -1}},
+		{"tick": 6, "inputs": {"move_x": -1, "move_y": -1, "roll": true}},
+		{"tick": 7, "inputs": {"move_x": 0, "move_y": 0}},
+		{"tick": 8, "inputs": {"move_x": 1, "move_y": 0, "roll": true}}
+	]
+}
