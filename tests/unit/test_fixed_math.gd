@@ -28,6 +28,14 @@ func test_to_int_floor_positive_and_negative() -> void:
 	assert_eq(FixedMath.to_int_floor(FixedMath.from_int(5)), 5)
 
 
+func test_to_int_trunc_rounds_toward_zero_both_signs() -> void:
+	assert_eq(FixedMath.to_int_trunc(FixedMath.from_float(3.9)), 3)
+	assert_eq(FixedMath.to_int_trunc(FixedMath.from_float(-3.9)), -3, "trunc(-3.9) == -3, not -4")
+	assert_eq(FixedMath.to_int_trunc(FixedMath.from_int(5)), 5)
+	assert_eq(FixedMath.to_int_trunc(FixedMath.from_int(-5)), -5)
+	assert_eq(FixedMath.to_int_trunc(0), 0)
+
+
 func test_to_int_round_half_away_from_zero() -> void:
 	assert_eq(FixedMath.to_int_round(FixedMath.from_float(3.4)), 3)
 	assert_eq(FixedMath.to_int_round(FixedMath.from_float(3.5)), 4)

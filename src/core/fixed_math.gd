@@ -39,6 +39,16 @@ static func to_int_floor(fx: int) -> int:
 	return fx >> FRAC_BITS
 
 
+## Truncates toward zero (never floors past zero for either sign) — the
+## variant collision code wants when clamping a movement delta to "at most
+## this far, in the same direction," since flooring a negative value would
+## overshoot further in the negative direction instead of stopping short.
+static func to_int_trunc(fx: int) -> int:
+	if fx >= 0:
+		return fx >> FRAC_BITS
+	return -((-fx) >> FRAC_BITS)
+
+
 static func to_int_round(fx: int) -> int:
 	if fx >= 0:
 		return (fx + HALF) >> FRAC_BITS

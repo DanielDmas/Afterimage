@@ -24,8 +24,8 @@
 - [~] Determinism CI job (PR subset + nightly full) — **AC:** an intentionally seeded divergence is caught by the job *(Pass 2: divergence-detection proven by unit test (`test_digest_is_sensitive_to_an_extra_frame`), running as part of the normal fast suite. Still open: a dedicated CI job, the PR-subset/nightly-full split, and Windows/macOS runners — deferred until the corpus is large enough for that split to matter, consistent with the Windows/macOS item already open from Pass 1)*
 
 ## M1 — Truth Skeleton (w7–12)
-*Exit: a fight can be recorded and replayed tick-perfect, and the fight is already fun.*
-- [ ] TruthSim actor model (integer mm positions, entity IDs) + grid collision & swept casts (tech §3.4) — **AC:** collision unit suite; corpus runs with movement
+*Exit: a fight can be recorded and replayed tick-perfect, and the fight is already fun. Not yet reached — Pass 3 delivers the actor/collision foundation below; AI, combat verbs, and the graybox room are still open.*
+- [x] TruthSim actor model (integer mm positions, entity IDs) + grid collision & swept casts (tech §3.4) — **AC:** collision unit suite; corpus runs with movement *(Pass 3: `src/sim/{actor,actor_registry,collision_grid,swept_collision,truth_sim}.gd`. Swept circle-vs-AABB verified against an executable Python reference using exact Fraction arithmetic before porting — same rigor as the Pass 1 PRNG. "Corpus runs with movement" satisfied narrowly: TruthSim has its own direct correctness tests rather than replacing the Pass 2 StubSim corpus, which still proves the record/replay/hash mechanism on its own terms — see dev_log.md for the reasoning)*
 - [ ] Line-of-sight + sound propagation (occlusion grid, room/portal BFS) — **AC:** deterministic sense tests; noise rings render from truth events
 - [ ] Sentry + Professional AI (utility patrol/investigate/engage/flee/report) — **AC:** paranoid/credulous bot stubs finish the graybox room
 - [ ] Combat verbs v1 (move/sprint/crouch/lean/aim/fire/reload/takedown/throw/Focus) — **AC:** every §4.9 tuning-checklist line has a recorded pass
