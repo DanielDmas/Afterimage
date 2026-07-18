@@ -124,3 +124,5 @@ The one failure was a test bug, not a system bug: `test_save_and_load_round_trip
 **Files added:** `src/sim/{actor,actor_registry,collision_grid,swept_collision,truth_sim}.gd`, `tests/unit/{test_actor_registry,test_collision_grid,test_swept_collision,test_truth_sim}.gd`.
 
 **Files changed:** `src/core/fixed_math.gd` (+`to_int_trunc`), `tests/unit/test_fixed_math.gd` (+1 test), `docs/roadmap.md` (M1 TruthSim/collision item updated).
+
+**Confirmed green** ([run 29663447877](https://github.com/DanielDmas/Afterimage/actions/runs/29663447877), commit `660968c`): both jobs `success`, test log reads `ALL PASSED (150/150)`. All 16 `test_swept_collision.gd` cases passed — including the diagonal-hit and already-overlapping-reports-t-zero cases that most depend on the ported slab-test arithmetic being right, not just the easy straight-line cases — and the aggregate zero-failures count confirms `test_collision_grid.gd`'s negative-coordinate floor-division tests and `test_actor_registry.gd` passed clean too. `gdlint`/`gdformat --check` clean on GitHub's infrastructure. **Pass 3 is closed.**
