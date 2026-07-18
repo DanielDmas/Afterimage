@@ -13,6 +13,8 @@
 | `docs/foundation_blueprints.md` | Full spec of the foundation layer (EventBus, state store, predicate language, dialogue DSL, NPC minds, claims, tooling) |
 | `docs/art_direction.md` | Visual identity, beauty standards, VFX grammar, typography, motion |
 | `docs/ux_charter.md` | Player-experience pillars, onboarding contract, QoL inventory, enjoyability metrics |
+| `docs/story_bible.md` | Fixed narrative canon: timeline, voice sheets, gazetteer, slice mission ground-truth outlines (spoiler-complete) |
+| `docs/roadmap.md` | Milestone backlog with acceptance criteria; the day-to-day tracking document |
 
 ---
 
@@ -106,7 +108,7 @@ Three acts across 12 missions. Act 1: earn trust, small jobs, the perception sys
 ### 2.6 Mission Beat Sheet (12 missions + prologue)
 Each entry: fantasy · phase emphasis · what the mission teaches or turns. Full per-mission ground-truth docs are authored per the §6.2 pipeline; this is the spine.
 
-**Prologue — "Cold Open."** Pre-insertion. Dr. Sova teaches Ground diegetically; a controlled tail-and-report training exercise ends with the game *showing its own trick once*: one scripted misheard line, immediately disclosed in a mini-Theater. Establishes the epistemic contract before the player can distrust us for the wrong reasons. (§4.17.)
+**Prologue — "Cold Open."** Pre-insertion. Dr. Sova teaches Ground diegetically; a controlled tail-and-report training exercise ends with the game *showing its own trick once*: one scripted misheard line, immediately disclosed in a mini-Theater. Establishes the epistemic contract before the player can distrust us for the wrong reasons. (§4.20.)
 
 **Act 1 — Getting In**
 1. **"Induction."** Night: ride-along debt collection at the Zálesí works' ruins; Radek must be *useful*. Teaches night-phase core verbs, noise, nonlethal options. First debrief (trivially honest — trust the form before you fear it).
@@ -280,7 +282,7 @@ Argus NPCs run a full mind-model (KNOWS/HIDES/LIES sets + personality vector + g
 - **When:** unlocked per mission after its debrief; full campaign timeline post-game.
 - **View:** synchronized dual-pane replay — truth view and percept view — with a scrubber, tick-accurate, driven by re-simulation (§5.3). Op timeline below the scrubber: every DistortionOp as an annotated span (class, cause variable, resolution: grounded / believed / acted-upon).
 - **Honesty report:** per-mission table of debrief claims vs. truth-delta vs. mode chosen — the discrepancy ledger made legible. The campaign view graphs the four mind variables across all missions against the claims record: the shape of a cover story, drawn by the player's own hands.
-- **Sharing:** one-click image export of a run's discrepancy summary and of any single dual-view moment (spoiler-safe crop rules: exports never include future-mission content). This is the organic-marketing engine (§11.3).
+- **Sharing:** one-click image export of a run's discrepancy summary and of any single dual-view moment (spoiler-safe crop rules: exports never include future-mission content). This is the organic-marketing engine (§11.4).
 - **Spectator/streamer note:** a toggle to suppress Theater auto-unlock until stream end, so streamers can experience missions blind and do Theater reveals as a segment.
 
 ### 4.13 Economy & Progression
@@ -300,7 +302,21 @@ Combat difficulty and psychological intensity are **separate sliders**. A player
 - **Standard accessibility:** colorblind-safe noise/suspicion indicators (shape+color double-coding), full remapping, hold-to-toggle alternatives for Ground and chokehold, UI scale, screen-reader support for all menu/paperwork screens (our forms are the game — they must read aloud), subtitle size/background options, no required rapid inputs.
 - **Sensitivity review** (external consultant) on the psychological depiction and the suicide-adjacent backstory content before slice release (§9 M7, §10).
 
-### 4.17 Onboarding & The Prologue
+### 4.17 Journal, Photography & Evidence
+- **The journal** is Eliška's own record, auto-written from **percept** events at cycle boundaries (mission summary, org-board notes, personal marginalia authored per mind-state band). Because it is percept-side it is `MemoryEdit`/`HUDGlitch`-eligible — and every edit is disclosable (Charter rule 5, §4.5): grounded journal pages show both versions, struck through and retyped (art_direction §4). The journal is the player's memory made object, which is exactly why the game can touch it.
+- **The instant camera** is the one **truth instrument** the player can carry: photographs are taken from the truth layer (a phantom photographed produces an empty frame — a discovery the game never explains in words; the film teaches it). Film is scarce (3–5 exposures per mission, resupply via Doubek's budget), so photographing is a *belief bet*: you spend truth-paper on what you doubt most. Photos attach to debrief claims as `evidence` provenance (armored, §4.10) and pin org-board entries.
+- **Evidence items** (documents lifted, tapes, ledger pages) carry claims with `evidence` provenance (blueprints §3). Evidence is heavy in cover terms: carrying it through a day phase is a suspicion risk (§4.7); the dead-drop ritual (hub calendar action) converts held evidence into filed evidence.
+
+### 4.18 Mission Outcomes & the No-Fail Contract
+Missions end in **outcome states, never game-over**: **Clean** (undetected, objectives met) · **Loud** (alarms/witnesses — the world reprices, §4.7) · **Burned** (objective lost or evidence destroyed — the campaign routes around it; every load-bearing plot flag has an alternate acquisition path, validator-enforced) · **Aborted** — the player may walk away at authored exfil points in every night mission; aborting an *Argus* job has cover consequences, aborting a *police* op has trust consequences, and both are always survivable. Death is the only repeated state (encounter restart, §3.2). The campaign cannot dead-end: the validator proves every mission completable from every reachable world state (§10). Failure in *Afterimage* is always a fork, never a wall.
+
+### 4.19 Endings Delivery & the Epilogue Engine
+- The three families (§2.7) resolve through an **epilogue engine**: authored fragments — news clippings, case-file pages, letters, one final playable scene per family — selected and ordered by predicate guards (blueprints §2) over final campaign state. Data: `EpilogueFragment {id, guard:Predicate, slot, weight, textKey}`; ~40 fragments at full scope, composing combinatorially so endings feel *computed from your campaign*, not picked from three.
+- Delivery order: final mission → debrief (the climax, §2.6) → epilogue sequence → **the full-campaign Afterimage unlock**: the complete honesty report, every mission's dual replay, and the four mind variables graphed across the whole game — the last image is the player reading their own file. Then, and only then, credits.
+- The epilogue is honest the way the debrief taught them to fear: correct-but-unverified assertions can die in a drawer; the tabloid lie can convict; the paperwork aesthetic carries it (a verdict is a form, too).
+- **Save-reload stance (ruled now, not on the go):** reloading a pre-debrief save to re-file claims is *allowed* — kind product (ux_charter X1), single-player freedom, and re-simulation makes it cheap. We spend zero design energy punishing it; the Theater simply records the account that was *submitted*. The design defends itself honestly instead: the player who scums the debrief is optimizing away the game's point, and the mind model (lies still price into moral injury on the timeline that counts) makes sincerity the interesting path, not the enforced one.
+
+### 4.20 Onboarding & The Prologue
 The prologue ("Cold Open," §2.6) carries the entire epistemic contract:
 1. Ground taught diegetically by Dr. Sova, practiced in a zero-stakes scene.
 2. The phase split taught separately — one pure day scene, one pure night scene — before any mission mixes them (visual grammar per phase is strict and distinct).
@@ -362,6 +378,7 @@ Non-negotiable invariant, enforced by architecture: **PerceptRenderer has read-o
 - `SuspicionEntry {npcId, observation, weight, decay, sharedWith[]}`
 - `MissionPackage {truthLevel, affordanceLayer, deck, npcRoster, debriefSpec, endingHooks}`
 - `DistortionDeck {missionId, weights{opClass→weight}, variableAffinity{}, caps{concurrent, perEncounter, tierCeiling}, budgetWeights{wS,wF,wM,wI}}`
+- `EpilogueFragment {id, guard:Predicate, slot, weight, textKey}` (§4.19)
 - Foundation entities built to Plan 01's designs (§5.7): `Claim {subject, predicate, object, qualifiers, provenance[]}`, `Predicate` (small declarative condition language, ~15 operators, one evaluator used by dialogue unlocks, event triggers, ending gates — one system, tested once, used everywhere), `NPC` mind schema (KNOWS/HIDES/LIES + personality vector + gossip edges), `DialogueGraph` (+ stance variants + claim-listeners), versioned save format from day one.
 
 ### 5.5 Enemy & Civilian AI
@@ -479,7 +496,10 @@ Two-person part-time core: **systems designer/programmer** and **writer/designer
 ### 11.2 Budget posture
 Part-time labor is the real cost and is sweat-funded. Cash outlay concentrates in: contracted art (the largest line), audio, consultant fees, and store/tax/legal boilerplate. The slice is deliberately *demo-able* (prologue + mission 1 as a public demo) to support funding applications or a publisher conversation after M7 — but the plan does not depend on external money to reach M7.
 
-### 11.3 Marketing beats (built from systems, not promises)
+### 11.3 Legal & licensing posture (settled now)
+Engine MIT (Godot), fonts OFL only (art_direction §6), no proprietary middleware anywhere by design (tech D10), all authored assets original with contractor agreements assigning IP; tool licenses (Aseprite etc.) are paid per seat. Music is commissioned work-for-hire — no licensed period tracks (the 2004 Eurodance "leaking through club walls" is pastiche we own). Store/tax/company boilerplate is a scheduled M7 task, not an afterthought. **Working-title note:** see the title-collision risk in §12 — a naming decision is due at M5, before any public-facing material ships.
+
+### 11.4 Marketing beats (built from systems, not promises)
 - **The trailer is one real Afterimage comparison**, unstaged, captured from a playtest run (M7 exit).
 - **Shareable honesty reports** (§4.12) as organic word-of-mouth: players posting their own discrepancy summaries is the community loop.
 - **Streamer mode** (§4.12) makes the Theater reveal a content segment.
@@ -496,7 +516,8 @@ Part-time labor is the real cost and is sweat-funded. Cash outlay concentrates i
 | Two-person team single-point-of-failure / burnout | Medium | milestone exits are demo-able states (safe pause points); content/engine split means either half can idle without blocking the other; scope valve is mission count, never system honesty |
 | Two-layer rendering doubles content cost | Medium | ops as decorators/shaders, not duplicated assets; distorted-variant budget capped in §6.1 |
 | Debrief/claims complexity balloons the consequence graph | Medium | consequence channels fixed at four (§4.10); liar-bot smoke tests; plot flags budgeted per mission in the ground-truth doc |
-| Player confusion between the two phases' rulesets | Low | strict visual grammar per phase; prologue teaches them separately before mixing (§4.17) |
+| Player confusion between the two phases' rulesets | Low | strict visual grammar per phase; prologue teaches them separately before mixing (§4.20) |
+| **Title collision:** "Afterimage" is already a released 2023 metroidvania — discoverability and trademark risk | Medium | *Afterimage* stays the working title/codename; a naming decision (keep with a strong subtitle — e.g. *Afterimage: Vranov* — or retitle; candidates riffing on the fiction: *Ground Truth*, *The Debrief*, *Percept*) is a scheduled M5 deliverable with a trademark/storefront search, before any public asset ships (§11.3) |
 
 ## 13. Post-Slice Roadmap (full game)
 - **Act batches:** missions 4–6, 7–9, 10–12 authored in three passes with a playtest between each; systems frozen at M7 except tuning constants and new op *instances* (no new op classes after the slice without a design review — the taxonomy is the contract).
@@ -505,10 +526,11 @@ Part-time labor is the real cost and is sweat-funded. Cash outlay concentrates i
 - **Plan 03 note:** the closing thought of v1 stands — a third design should someday ask what happens when the truth is known by everyone and matters to no one. A fight for another document.
 
 ## 14. What We Build First (immediate next steps, in order)
-1. **Ratify this document** — especially the Fairness Charter (§4.5) and the DistortionOp taxonomy (§4.2), which constrain everything downstream, and the §4.4 tuning baselines, which we will argue about with numbers.
-2. **Write the prologue + mission 1–3 ground-truth docs** (§6.2 pipeline) and the story-bible timeline for the fixed Meridian canon (§2.2).
-3. **Repo scaffold per §5.8** and the M0 walking skeleton: EventBus, GameStateStore, Predicate evaluator, fixed-tick harness, determinism CI. First line of code is a test.
+1. ~~Ratify the document set~~ — **done**: this plan, `tech_guidelines.md`, `foundation_blueprints.md`, `art_direction.md`, `ux_charter.md`.
+2. ~~Story-bible timeline + prologue/slice mission ground-truth outlines~~ — **done**: `story_bible.md` (full ground-truth docs deepen from those outlines during each mission's authoring pass, §6.2).
+3. **Repo scaffold per §5.8** and the M0 walking skeleton: EventBus, GameStateStore, Predicate evaluator, fixed-tick harness, determinism CI. First line of code is a test. Work items: `roadmap.md` M0.
 4. **Graybox the combat room** (M1 prep): one space, Sentry + Professional, the §4.9 checklist printed and taped to the monitor.
+Development now tracks against **`roadmap.md`** — the milestone backlog with acceptance criteria and the definition-of-ready-to-code checklist.
 
 ---
 

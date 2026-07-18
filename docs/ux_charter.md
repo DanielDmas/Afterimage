@@ -1,5 +1,5 @@
 # AFTERIMAGE — Player Experience Charter
-**Document type:** UX + enjoyability standards. Companion to `master_plan.md` (§3, §4.15–4.17, §7) and `art_direction.md` (§6–7).
+**Document type:** UX + enjoyability standards. Companion to `master_plan.md` (§3, §4.15–4.16, §4.20, §7) and `art_direction.md` (§6–7).
 **Purpose:** the game may be psychologically merciless; the *product* is never allowed to be. This charter defines what "user friendly and enjoyable" means, testably, in advance. The game distrusts its protagonist — never its player.
 
 ---
@@ -27,7 +27,7 @@ The first hour decides everything. Targets, measured in playtests (§6):
 
 1. **Minute 0–2:** cold boot → content-and-comfort setup (content toggles, subtitle size, brightness/audio calibration, control scheme detect) → main menu. One screen each, plain language, resumable later. Defaults are sensible; a player who holds "continue" through it all gets a good experience.
 2. **Minute 2–10:** playing. The Cold Open starts in a controllable scene within 60 seconds of "New Game." **Time-to-first-meaningful-choice < 10 min.**
-3. **Minute 10–30:** Ground taught and used; the game shows its trick once and proves it (mini-Theater, master_plan §4.17). The epistemic contract lands *before* the first real mission.
+3. **Minute 10–30:** Ground taught and used; the game shows its trick once and proves it (mini-Theater, master_plan §4.20). The epistemic contract lands *before* the first real mission.
 4. **Minute 30–60:** first full cycle (day → night → debrief) completed; first honest debrief filed; hub understood.
 5. Exit criterion for the prologue in playtests: a new player can state, unprompted, (a) what Ground does, (b) that the game will lie and later prove it, (c) what the debrief is for. Three sentences, 90%+ of testers.
 

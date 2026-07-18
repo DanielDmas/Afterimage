@@ -14,8 +14,10 @@ Top-down 2D action thriller (Godot 4). You are an undercover officer inside a cr
 | [`docs/foundation_blueprints.md`](docs/foundation_blueprints.md) | Full specification of the foundation layer: EventBus, GameStateStore, predicate language, dialogue DSL, NPC minds, claims/provenance, validators & bots |
 | [`docs/art_direction.md`](docs/art_direction.md) | The beauty bible: *sodium light and carbon paper* — palette, lighting, pixel-art specs, distortion VFX grammar, typography, motion |
 | [`docs/ux_charter.md`](docs/ux_charter.md) | Player-experience standards: onboarding contract, respect-for-time rules, quality-of-life inventory, testable enjoyability metrics |
+| [`docs/story_bible.md`](docs/story_bible.md) | **Spoiler-complete** narrative canon: fixed timeline (1993–2004), character voice sheets, gazetteer, ground-truth outlines for prologue + slice missions |
+| [`docs/roadmap.md`](docs/roadmap.md) | The development backlog: milestone work items with acceptance criteria, and the definition-of-ready-to-code checklist |
 
-Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed.
+Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed. (`story_bible.md` spoils the entire game — read deliberately.)
 
 ## Ground rules (from the plans, binding)
 1. **Determinism is law** — the truth simulation replays tick-perfect, always (it's the save format, the bug report, and the Afterimage Theater).
