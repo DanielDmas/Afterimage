@@ -1,9 +1,18 @@
-# AFTERIMAGE
+# AFTERIMAGES: VRANOV
 *A psychological action thriller about a mind you cannot trust — including yours.*
 
-Top-down 2D action thriller (Godot 4). You are an undercover officer inside a criminal intelligence firm in Vranov, 2004. The engine simulates the **true** world on one layer and renders only what your character **believes** on another — and after every mission, a replay theater shows you both, side by side.
+Top-down 2D action thriller (Godot 4.3). You are an undercover officer inside a criminal intelligence firm in Vranov, 2004. The engine simulates the **true** world on one layer and renders only what your character **believes** on another — and after every mission, a replay theater shows you both, side by side.
 
-**Status:** pre-production. Planning complete and ratified; no code yet. Development follows the milestone plan below — nothing is decided on the go.
+**Title note:** the game is titled *Afterimages: Vranov* (the plural + place-name resolves the working title's collision with an unrelated, already-released 2023 metroidvania called *Afterimage*, flagged as a risk in `master_plan.md` §12). The in-fiction replay mechanic keeps its original singular name, **the Afterimage** — see `master_plan.md` §4.12/§4.19.
+
+**Status:** in development. Planning is complete and ratified (docs below); engineering is underway — see `docs/dev_log.md` for pass-by-pass progress and `docs/roadmap.md` for the milestone backlog. Nothing is decided on the go: every system is built to the locked specs in the document set.
+
+## Running the tests
+This is a Godot 4.3.x project (`docs/ENGINE_VERSION` pins the exact build). With the editor installed:
+```
+godot --headless --path . --script res://tests/run_tests.gd
+```
+Exit code 0 = all tests passed. CI (`.github/workflows/ci.yml`) runs this on every push, plus `gdlint`/`gdformat --check` for style. See `docs/tech_guidelines.md` §9 and §12 for why this project uses a small custom GDScript test harness (`tests/framework/`) instead of GUT for now.
 
 ## The document set
 
@@ -16,6 +25,7 @@ Top-down 2D action thriller (Godot 4). You are an undercover officer inside a cr
 | [`docs/ux_charter.md`](docs/ux_charter.md) | Player-experience standards: onboarding contract, respect-for-time rules, quality-of-life inventory, testable enjoyability metrics |
 | [`docs/story_bible.md`](docs/story_bible.md) | **Spoiler-complete** narrative canon: fixed timeline (1993–2004), character voice sheets, gazetteer, ground-truth outlines for prologue + slice missions |
 | [`docs/roadmap.md`](docs/roadmap.md) | The development backlog: milestone work items with acceptance criteria, and the definition-of-ready-to-code checklist |
+| [`docs/dev_log.md`](docs/dev_log.md) | Pass-by-pass engineering log: what was built, how it was verified, what's deferred |
 
 Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed. (`story_bible.md` spoils the entire game — read deliberately.)
 
@@ -26,8 +36,5 @@ Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux
 4. **Content is data** — no mission logic in engine code.
 5. **Cruel game, kind product** — all friction is authored; none is accidental.
 
-## Next steps (master_plan §14)
-1. Ratify the document set (done — this commit).
-2. Write prologue + mission 1–3 ground-truth docs and the story-bible timeline.
-3. Repo scaffold + M0 walking skeleton (EventBus, state store, predicate evaluator, fixed-tick harness, determinism CI). *First line of code is a test.*
-4. Graybox the combat room (M1 prep).
+## Current progress
+Pass 1 of a planned 20-pass engineering effort is complete: the repo scaffold, the deterministic core (`FixedMath`, `Xoshiro128StarStar` PRNG, `EventBus`, the `Predicate` language + `WorldQuery`), a custom unit-test harness, and CI are in place — 67 tests, all passing lint/format. Full detail in [`docs/dev_log.md`](docs/dev_log.md); the live backlog is [`docs/roadmap.md`](docs/roadmap.md).

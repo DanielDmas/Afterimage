@@ -10,18 +10,18 @@
 - [x] Foundation layer specified (`foundation_blueprints.md`)
 - [x] Art direction + UX charter ratified (`art_direction.md`, `ux_charter.md`)
 - [x] Story canon fixed; slice mission ground-truth outlines written (`story_bible.md`)
-- [ ] Godot 4.3.x exact patch chosen and recorded in `/docs/ENGINE_VERSION` (first act of M0)
-- [ ] GitHub Actions runner plan confirmed (Linux reference + Win/mac nightly, tech §9)
+- [x] Godot 4.3.x exact patch chosen and recorded in `/docs/ENGINE_VERSION` (Pass 1: 4.3.0-stable)
+- [~] GitHub Actions runner plan confirmed — Linux reference CI landed Pass 1 (`.github/workflows/ci.yml`); Windows/macOS nightly runners still open
 
 ## M0 — Foundations (w1–6)
-*Exit (master_plan §9): walking skeleton — inputs recorded in a stub scene replay tick-perfect on every platform target.*
-- [ ] Repo scaffold per master_plan §5.8; lint config (gdscript-toolkit), CI pipeline skeleton — **AC:** a PR with a style violation fails
-- [ ] Fixed-point helpers + PRNG (xoshiro128**, splitmix64 seeding) — **AC:** unit tests vs. reference vectors green
-- [ ] EventBus (typed, queued dispatch) — **AC:** ordering/reentrancy unit tests
-- [ ] GameStateStore + save serialization + `schema_version` + migration harness — **AC:** save→load→save byte-identical fixture test
-- [ ] Predicate evaluator (18 operators, blueprints §2) — **AC:** full operator test matrix; unknown-operator rejection
-- [ ] Fixed-tick harness with `InputFrame` recording/replay — **AC:** determinism corpus v0 (3 stub runs) re-simulates hash-identical on Linux/Win/mac in CI
-- [ ] Determinism CI job (PR subset + nightly full) — **AC:** an intentionally seeded divergence is caught by the job
+*Exit (master_plan §9): walking skeleton — inputs recorded in a stub scene replay tick-perfect on every platform target. **Not yet reached** — Pass 1 delivered the deterministic core below; the fixed-tick harness, InputFrame recording, and GameStateStore are still open (targeted for Pass 2). See `dev_log.md` Pass 1 for the verification caveat: this sandbox has no Godot binary, so these are verified by lint/format tooling + algorithmic cross-checks now, and by CI's real headless Godot run on push.*
+- [x] Repo scaffold per master_plan §5.8; lint config (gdtoolkit), CI pipeline skeleton — **AC:** a PR with a style violation fails *(Pass 1; gdlint/gdformat --check both wired into CI and verified locally against every source file)*
+- [x] Fixed-point helpers + PRNG (xoshiro128**, splitmix64 seeding) — **AC:** unit tests vs. reference vectors green *(Pass 1: `src/core/fixed_math.gd`, `src/core/prng.gd`; reference vectors cross-derived from an executable Python transliteration, not hand-guessed)*
+- [x] EventBus (typed, queued dispatch) — **AC:** ordering/reentrancy unit tests *(Pass 1: `src/core/event_bus.gd`, 11 tests incl. reentrant-publish-is-queued and self-unsubscribe-mid-dispatch)*
+- [ ] GameStateStore + save serialization + `schema_version` + migration harness — **AC:** save→load→save byte-identical fixture test *(Pass 2)*
+- [x] Predicate evaluator (18 operators, blueprints §2) — **AC:** full operator test matrix; unknown-operator rejection *(Pass 1: `src/core/predicate.gd` + `src/core/world_query.gd`, 31 tests across evaluate() and validate())*
+- [ ] Fixed-tick harness with `InputFrame` recording/replay — **AC:** determinism corpus v0 (3 stub runs) re-simulates hash-identical on Linux/Win/mac in CI *(Pass 2)*
+- [ ] Determinism CI job (PR subset + nightly full) — **AC:** an intentionally seeded divergence is caught by the job *(Pass 2, needs the corpus above first)*
 
 ## M1 — Truth Skeleton (w7–12)
 *Exit: a fight can be recorded and replayed tick-perfect, and the fight is already fun.*

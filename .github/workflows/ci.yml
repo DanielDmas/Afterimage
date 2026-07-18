@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+env:
+  GODOT_VERSION: "4.3-stable"
+  GODOT_ARCHIVE: "Godot_v4.3-stable_linux.x86_64.zip"
+  GODOT_BIN: "Godot_v4.3-stable_linux.x86_64"
+
+jobs:
+  test:
+    name: Unit test suite (headless Godot)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Cache Godot download
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ github.workspace }}/.godot-bin"
+          cd "${{ github.workspace }}/.godot-bin"
+          curl -fL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_ARCHIVE}"
+          unzip -q godot.zip
+          chmod +x "${GODOT_BIN}"
+
+      - name: Sanity-check the binary and print its version
+        run: |
+          set -euo pipefail
+          echo "docs/ENGINE_VERSION pins:"
+          cat docs/ENGINE_VERSION
+          echo "---"
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" --headless --version
+
+      - name: Run unit test suite
+        run: |
+          set -euo pipefail
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" \
+            --headless --path . --script res://tests/run_tests.gd
+
+  lint:
+    name: GDScript style lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install gdtoolkit
+        run: pip install "gdtoolkit==4.*"
+
+      - name: gdlint (style/lint rules)
+        run: gdlint src/ tests/
+
+      - name: gdformat --check (formatting must already match gdformat's output)
+        run: gdformat --check src/ tests/

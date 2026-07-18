@@ -1,8 +1,9 @@
-# GAME PLAN 02 — "AFTERIMAGE"
+# GAME PLAN 02 — "AFTERIMAGES: VRANOV" (codename Project Afterimage)
 ### A psychological action thriller about a mind you cannot trust — including yours
 **Document type:** Full design + technical architecture + production plan (pre-production, expanded edition)
-**Document status:** v2.0 — expanded to a standalone master development plan. Supersedes v1.
-**Relationship to Plan 01 (*The Quiet Ledger*):** Design reference and shared-universe bible **only**. That game will not be built, and its planning document has been removed from the repo — every design it contributed is restated standalone in `foundation_blueprints.md`. All systems are planned, specced, and scheduled **inside this project** (§5.7, §9). *Afterimage* plays, and is built, completely standalone.
+**Document status:** v2.1 — title finalized (§12 naming decision, resolved ahead of its M5 schedule); engineering underway, see `dev_log.md`.
+**Title:** the shipping title is **Afterimages: Vranov** — the plural + place-name resolves this document's own §12 risk (a same-named 2023 metroidvania). The in-fiction replay mechanic keeps its original singular name, **the Afterimage** (§4.12, §4.19); every other use of "Afterimage" below refers to that mechanic, the project's internal codename, or this document's own title, not the storefront title.
+**Relationship to Plan 01 (*The Quiet Ledger*):** Design reference and shared-universe bible **only**. That game will not be built, and its planning document has been removed from the repo — every design it contributed is restated standalone in `foundation_blueprints.md`. All systems are planned, specced, and scheduled **inside this project** (§5.7, §9). *Afterimages: Vranov* plays, and is built, completely standalone.
 **No code in this document — design, architecture, and production planning only.**
 
 **Document map (the complete pre-production set — nothing is decided on the go):**
@@ -15,6 +16,7 @@
 | `docs/ux_charter.md` | Player-experience pillars, onboarding contract, QoL inventory, enjoyability metrics |
 | `docs/story_bible.md` | Fixed narrative canon: timeline, voice sheets, gazetteer, slice mission ground-truth outlines (spoiler-complete) |
 | `docs/roadmap.md` | Milestone backlog with acceptance criteria; the day-to-day tracking document |
+| `docs/dev_log.md` | Engineering progress log, one entry per development pass — the narrative record of what was built, verified, and deferred |
 
 ---
 
@@ -517,7 +519,7 @@ Engine MIT (Godot), fonts OFL only (art_direction §6), no proprietary middlewar
 | Two-layer rendering doubles content cost | Medium | ops as decorators/shaders, not duplicated assets; distorted-variant budget capped in §6.1 |
 | Debrief/claims complexity balloons the consequence graph | Medium | consequence channels fixed at four (§4.10); liar-bot smoke tests; plot flags budgeted per mission in the ground-truth doc |
 | Player confusion between the two phases' rulesets | Low | strict visual grammar per phase; prologue teaches them separately before mixing (§4.20) |
-| **Title collision:** "Afterimage" is already a released 2023 metroidvania — discoverability and trademark risk | Medium | *Afterimage* stays the working title/codename; a naming decision (keep with a strong subtitle — e.g. *Afterimage: Vranov* — or retitle; candidates riffing on the fiction: *Ground Truth*, *The Debrief*, *Percept*) is a scheduled M5 deliverable with a trademark/storefront search, before any public asset ships (§11.3) |
+| ~~**Title collision:** "Afterimage" is already a released 2023 metroidvania~~ | ~~Medium~~ | **Resolved** (ahead of the scheduled M5 slot): titled **Afterimages: Vranov**. A formal trademark/storefront search is still due at M5 before any public asset ships (§11.3) — this closes the *design* question, not the legal-clearance task |
 
 ## 13. Post-Slice Roadmap (full game)
 - **Act batches:** missions 4–6, 7–9, 10–12 authored in three passes with a playtest between each; systems frozen at M7 except tuning constants and new op *instances* (no new op classes after the slice without a design review — the taxonomy is the contract).

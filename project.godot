@@ -1,0 +1,54 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes to the same file as [section.subsection]
+;
+; Locked decisions this file encodes — see docs/tech_guidelines.md:
+;   D1  Godot 4.3.x pinned (see docs/ENGINE_VERSION for the exact patch)
+;   D6  640x360 logical resolution, integer-scaled, letterboxed
+;   D11 InputMap actions only — gameplay verbs are named here as they land;
+;       Pass 1 ships no scenes yet, so no gameplay actions exist yet.
+
+config_version=5
+
+[application]
+
+config/name="Afterimages: Vranov"
+config/description="A psychological action thriller about a mind you cannot trust — including yours."
+config/tags=PackedStringArray("top-down", "action", "thriller", "2d")
+run/main_scene=""
+config/features=PackedStringArray("4.3", "Forward Plus")
+boot_splash/show_image=false
+config/icon=""
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+window/vsync/vsync_mode=1
+
+[debug]
+
+; tech_guidelines.md D2: GDScript is statically typed, warnings-as-errors.
+gdscript/warnings/treat_warnings_as_errors=true
+
+[physics]
+
+; TruthSim owns its own deterministic collision (tech_guidelines.md §3.4);
+; Godot's physics server is not part of the simulation contract and is left
+; at engine defaults for any cosmetic/presentation-only use.
+common/enable_pause_aware_picking=false
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+environment/defaults/default_environment=""
