@@ -49,17 +49,30 @@ func test_mission_alerted_zone_applies_no_decay() -> void:
 	assert_eq(state.value_fx(), FixedMath.from_int(8))
 
 
-func test_per_tick_and_batch_decay_agree_over_one_second() -> void:
+## Per-tick and batched decay do NOT agree exactly: 30 separate truncating
+## divisions (one per advance_tick() call) each lose a little more than a
+## single division of the same total does. rate_fx=-26214 (-0.4 in Q16.16);
+## one tick's share is trunc_div(-26214, 30) = -873 (true value -873.8),
+## losing ~0.2 fx units per tick, accumulating to -26190 over 30 ticks —
+## 24 fx short of the batched form's exact -26214. This is exactly why
+## advance_ticks() exists (see its doc comment): the batch form is the more
+## precise one, by design, and this test pins the real, hand-verified size
+## of that gap rather than asserting a false "they agree" premise (caught
+## by CI, not the sandbox's gdlint/gdformat pass, since there's no local
+## Godot binary here to run the actual interpreter).
+func test_per_tick_decay_accumulates_more_rounding_error_than_batched() -> void:
 	var per_tick := AcuteStressState.new()
-	per_tick.gain_entering_combat()
+	per_tick.gain_entering_combat()  # 8.0
 	for _i: int in range(30):
 		per_tick.advance_tick(AcuteStressState.Zone.SAFE)
+	assert_eq(per_tick.value_fx(), 498098)
 
 	var batched := AcuteStressState.new()
 	batched.gain_entering_combat()
 	batched.advance_ticks(30, AcuteStressState.Zone.SAFE)
+	assert_eq(batched.value_fx(), 498074)
 
-	assert_eq(per_tick.value_fx(), batched.value_fx())
+	assert_lt(batched.value_fx(), per_tick.value_fx())
 
 
 func test_relieved_by_ground_completion() -> void:
