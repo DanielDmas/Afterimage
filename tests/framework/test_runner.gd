@@ -71,17 +71,34 @@ static func _find_test_scripts(dir_path: String) -> Array[String]:
 	return found
 
 
+## Records a suite that could not even be loaded/instantiated as a hard
+## failure, not a silent skip: a script with a parse/type error still
+## printed a SCRIPT ERROR to the log before this fix (Pass 6's CI run
+## 29666674090 caught exactly this — a genuine `Lean.Side` type mismatch
+## made `load()` return null, and the run still reported "ALL PASSED
+## (260/260)" with the 8 missing tests nowhere in the count). Matches
+## run_tests.gd's own stated contract: "an empty run is a red build, never
+## a silent green one" — that has to hold per-suite, not just for the
+## degenerate all-suites-missing case all_passed() already guarded.
+static func _record_load_failure(file_path: String, reason: String, report: RunReport) -> void:
+	push_error("AfterimageTestRunner: %s: %s" % [file_path, reason])
+	var result := CaseResult.new()
+	result.script_path = file_path
+	result.method_name = "<suite load>"
+	result.failures = ["test suite failed to load: %s" % reason]
+	result.passed = false
+	report.results.append(result)
+
+
 static func _run_script(file_path: String, report: RunReport) -> void:
 	var script: GDScript = load(file_path)
 	if script == null:
-		push_error("AfterimageTestRunner: failed to load %s" % file_path)
+		_record_load_failure(file_path, "failed to load (parse or type error)", report)
 		return
 
 	var probe: Object = script.new()
 	if not (probe is AfterimageTestCase):
-		push_error(
-			"AfterimageTestRunner: %s does not extend AfterimageTestCase, skipping" % file_path
-		)
+		_record_load_failure(file_path, "does not extend AfterimageTestCase", report)
 		return
 
 	var test_method_names: Array[String] = []
