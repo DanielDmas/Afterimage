@@ -8,8 +8,17 @@
 ; Locked decisions this file encodes — see docs/tech_guidelines.md:
 ;   D1  Godot 4.3.x pinned (see docs/ENGINE_VERSION for the exact patch)
 ;   D6  640x360 logical resolution, integer-scaled, letterboxed
-;   D11 InputMap actions only — gameplay verbs are named here as they land;
-;       Pass 1 ships no scenes yet, so no gameplay actions exist yet.
+;   D11 InputMap actions only — gameplay verbs are named here as they land.
+;       Pass 6 names the combat-verb actions (move/sprint/crouch/lean/aim/
+;       fire/reload/takedown/throw/Focus, master_plan.md §4.9) with empty
+;       "events" arrays: no default key/button binding is assigned yet.
+;       Deliberate — hand-authoring a Godot InputEventKey resource literal
+;       with no editor available to generate/verify it risked a wrong
+;       keycode more than it was worth, and key-binding choice is properly
+;       ux_charter.md's "full remapping" scope (Pass 19), not this pass's
+;       (combat-verb *logic*). Declaring the action names now unblocks
+;       everything that references them by name; tests/unit/test_input_map.gd
+;       asserts every one of them actually registered.
 
 config_version=5
 
@@ -37,6 +46,65 @@ window/vsync/vsync_mode=1
 
 ; tech_guidelines.md D2: GDScript is statically typed, warnings-as-errors.
 gdscript/warnings/treat_warnings_as_errors=true
+
+[input]
+
+move_up={
+"deadzone": 0.2,
+"events": []
+}
+move_down={
+"deadzone": 0.2,
+"events": []
+}
+move_left={
+"deadzone": 0.2,
+"events": []
+}
+move_right={
+"deadzone": 0.2,
+"events": []
+}
+sprint={
+"deadzone": 0.2,
+"events": []
+}
+crouch={
+"deadzone": 0.2,
+"events": []
+}
+lean_left={
+"deadzone": 0.2,
+"events": []
+}
+lean_right={
+"deadzone": 0.2,
+"events": []
+}
+aim={
+"deadzone": 0.2,
+"events": []
+}
+fire={
+"deadzone": 0.2,
+"events": []
+}
+reload={
+"deadzone": 0.2,
+"events": []
+}
+takedown={
+"deadzone": 0.2,
+"events": []
+}
+throw={
+"deadzone": 0.2,
+"events": []
+}
+focus={
+"deadzone": 0.2,
+"events": []
+}
 
 [physics]
 
