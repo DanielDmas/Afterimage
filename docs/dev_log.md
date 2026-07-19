@@ -323,4 +323,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `docs/roadmap.md` (M3 DistortionDirector + Fairness auditor v1 items checked off with scope notes).
 
+**Confirmed green (commit `05531b3`):** CI run [29680669581](https://github.com/DanielDmas/Afterimage/actions/runs/29680669581) — both jobs `success`. Test log shows the literal `ALL PASSED (391/391)` with zero `[FAIL]` lines; confirmed all 15 `test_distortion_director.gd` cases (including the seed=0/seed=1 PRNG-vector-derived weighted-pick and reproducibility tests, and the Ground-resolution decay sequence) and all 11 `test_fairness_auditor.gd` cases (all 8 Charter rule fixtures plus unknown-op-class and multi-violation aggregation) ran and passed by name in the raw log text. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`) also green. The hand-computed PRNG-vector arithmetic — never previously run through an actual Godot interpreter before this push — held up exactly as verified.
+
 ---
