@@ -256,4 +256,8 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `src/sim/truth_sim.gd` (noise events gain `tag`/`source_id`; `capture_percept_snapshot()` gains `"sound_events"`), `tests/unit/test_truth_sim_percept.gd` (+4 tests), `docs/roadmap.md` (M2 ops item checked off with scope notes).
 
+**CI caught one real bug, in `PhantomEntity`'s id scheme:** the first push (`12854e8`) failed a single test, `test_apply_adds_a_phantom_actor_with_a_negative_id` — everything else, including the capstone integration test and both `resolve_grounded`-removes-exactly-this-instance's-phantom tests, passed clean. The cause: Godot 4 sets an internal flag bit on a `RefCounted` object's instance id that can make `get_instance_id()` read back as already-negative in GDScript's signed 64-bit `int` — a bare `-get_instance_id()` could therefore double-negate back to *positive* for some instances, defeating the "never collides with a real (positive) actor id" guarantee. Fixed in `a6ad593` with `-absi(get_instance_id())`, which forces the sign unconditionally regardless of which way Godot's own convention happens to go for a given instance — a real Godot-specific behavior no local editor could have surfaced before pushing.
+
+**Confirmed green** ([run 29679067167](https://github.com/DanielDmas/Afterimage/actions/runs/29679067167), commit `a6ad593`): both jobs `success` — the lint job's "percept/truth architecture boundary" step passed specifically — and the test log reads `ALL PASSED (323/323)`, including `test_phantom_entity.gd`'s previously-failing case and both instance-disambiguation tests. `gdlint`/`gdformat --check`/`percept_truth_boundary_lint.py` clean on GitHub's infrastructure. **Pass 9 is closed.**
+
 ---
