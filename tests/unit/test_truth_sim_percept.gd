@@ -80,3 +80,40 @@ func test_mutating_the_returned_snapshot_does_not_affect_truth_sim() -> void:
 	var fresh_snapshot: Dictionary = sim.capture_percept_snapshot()
 	assert_eq(fresh_snapshot["player_id"], sim.player_id)
 	assert_eq(fresh_snapshot["actors"].size(), 1)
+
+
+## --- Pass 9: "sound_events" is the real truth source AudioSwap/
+## PhantomAudio (master_plan §4.2) operate on. ---
+
+
+func test_snapshot_includes_a_sound_event_from_sprinting() -> void:
+	var sim := TruthSim.new(500, Vector2i(0, 0), 300)
+	sim.step(InputFrame.new(1, {"move_x": 80, "move_y": 0, "sprinting": true}))
+	var events: Array = sim.capture_percept_snapshot()["sound_events"]
+	assert_eq(events.size(), 1)
+	assert_eq(events[0]["tag"], "footsteps")
+	assert_eq(events[0]["source_id"], sim.player_id)
+
+
+func test_snapshot_includes_a_sound_event_from_firing() -> void:
+	var sim := TruthSim.new(500, Vector2i(0, 0), 300)
+	sim.step(InputFrame.new(1, {"fire": true, "aim_dir": Vector2i(1, 0)}))
+	var events: Array = sim.capture_percept_snapshot()["sound_events"]
+	assert_eq(events.size(), 1)
+	assert_eq(events[0]["tag"], "gunshot")
+	assert_eq(events[0]["source_id"], sim.player_id)
+
+
+func test_snapshot_includes_a_sound_event_from_throwing() -> void:
+	var sim := TruthSim.new(500, Vector2i(0, 0), 300)
+	sim.step(InputFrame.new(1, {"throw_target": Vector2i(1000, 0)}))
+	var events: Array = sim.capture_percept_snapshot()["sound_events"]
+	assert_eq(events.size(), 1)
+	assert_eq(events[0]["tag"], "thrown_object")
+
+
+func test_snapshot_sound_events_do_not_persist_past_their_own_tick() -> void:
+	var sim := TruthSim.new(500, Vector2i(0, 0), 300)
+	sim.step(InputFrame.new(1, {"fire": true, "aim_dir": Vector2i(1, 0)}))
+	sim.step(InputFrame.new(2, {}))
+	assert_eq((sim.capture_percept_snapshot()["sound_events"] as Array).size(), 0)

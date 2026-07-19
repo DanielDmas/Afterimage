@@ -24,6 +24,7 @@ var _event_bus: EventBus
 var _ai_agents: Dictionary = {}  ## int actor_id -> AiAgent
 var _weapons: Dictionary = {}  ## int actor_id -> Weapon
 var _focus: FocusState
+var _last_tick_sound_events: Array = []
 
 
 func _init(
@@ -70,13 +71,17 @@ func spawn_ai(
 ## collected as they happen and offered to every AI actor's hearing check
 ## the same tick they occur — same-tick reaction is a v0 simplification;
 ## real audio propagation delay is a presentation-layer concern with
-## nothing to attach to before a real level exists.
+## nothing to attach to before a real level exists. The same list is kept
+## for capture_percept_snapshot() (Pass 9's "sound_events") — each entry
+## also carries a "tag" and "source_id" the AI hearing check never
+## needed, added for percept's benefit (AudioSwap/PhantomAudio, §4.2).
 func step(frame: InputFrame) -> void:
 	clock.advance()
 	var noise_events: Array = []
 	_resolve_player_movement(frame, noise_events)
 	_resolve_player_combat(frame, noise_events)
 	_resolve_ai_ticks(noise_events)
+	_last_tick_sound_events = noise_events
 
 
 ## Reads "move_x"/"move_y" as a raw per-tick millimeter delta request —
@@ -106,8 +111,16 @@ func _resolve_player_movement(frame: InputFrame, noise_events: Array) -> void:
 			"ActorMoved", {"id": player_id, "position": new_pos}, null, clock.current_tick
 		)
 	if bool(frame.inputs.get("sprinting", false)):
-		noise_events.append(
-			{"position": new_pos, "loudness": MovementProfile.SPRINT_NOISE_LOUDNESS}
+		(
+			noise_events
+			. append(
+				{
+					"position": new_pos,
+					"loudness": MovementProfile.SPRINT_NOISE_LOUDNESS,
+					"tag": "footsteps",
+					"source_id": player_id,
+				}
+			)
 		)
 
 
@@ -130,8 +143,16 @@ func _resolve_player_combat(frame: InputFrame, noise_events: Array) -> void:
 				player.position, aim_dir, weapon, targets, grid
 			)
 			weapon.fire()
-			noise_events.append(
-				{"position": player.position, "loudness": weapon.fire_noise_loudness}
+			(
+				noise_events
+				. append(
+					{
+						"position": player.position,
+						"loudness": weapon.fire_noise_loudness,
+						"tag": "gunshot",
+						"source_id": player_id,
+					}
+				)
 			)
 			if _event_bus:
 				_event_bus.publish(
@@ -163,8 +184,16 @@ func _resolve_player_combat(frame: InputFrame, noise_events: Array) -> void:
 	if throw_target != null:
 		var result: Dictionary = CombatResolver.resolve_throw(player.position, throw_target)
 		if result.get("landed", false):
-			noise_events.append(
-				{"position": result["position"], "loudness": result["noise_loudness"]}
+			(
+				noise_events
+				. append(
+					{
+						"position": result["position"],
+						"loudness": result["noise_loudness"],
+						"tag": "thrown_object",
+						"source_id": player_id,
+					}
+				)
 			)
 			if _event_bus:
 				_event_bus.publish(
@@ -303,6 +332,10 @@ func player_weapon_is_reloading() -> bool:
 ## all (enforced by tools/percept_truth_boundary_lint.py in CI) — this
 ## method is the one, deliberate seam where truth hands data upward,
 ## exactly as the architecture diagram's single arrow describes.
+##
+## "sound_events" (Pass 9) is this same tick's noise events (sprint,
+## gunfire, a landed throw — see step()'s class doc), the real truth
+## source AudioSwap/PhantomAudio (master_plan §4.2) operate on.
 func capture_percept_snapshot() -> Dictionary:
 	var actor_snapshots: Array = []
 	for id: int in actors.all_ids():
@@ -320,4 +353,9 @@ func capture_percept_snapshot() -> Dictionary:
 				}
 			)
 		)
-	return {"tick": clock.current_tick, "player_id": player_id, "actors": actor_snapshots}
+	return {
+		"tick": clock.current_tick,
+		"player_id": player_id,
+		"actors": actor_snapshots,
+		"sound_events": _last_tick_sound_events.duplicate(true),
+	}
