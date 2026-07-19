@@ -75,7 +75,7 @@ static func _find_test_scripts(dir_path: String) -> Array[String]:
 ## failure, not a silent skip: a script with a parse/type error still
 ## printed a SCRIPT ERROR to the log before this fix (Pass 6's CI run
 ## 29666674090 caught exactly this — a genuine `Lean.Side` type mismatch
-## made `load()` return null, and the run still reported "ALL PASSED
+## in `load()`-ing a test script, and the run still reported "ALL PASSED
 ## (260/260)" with the 8 missing tests nowhere in the count). Matches
 ## run_tests.gd's own stated contract: "an empty run is a red build, never
 ## a silent green one" — that has to hold per-suite, not just for the
@@ -92,12 +92,17 @@ static func _record_load_failure(file_path: String, reason: String, report: RunR
 
 static func _run_script(file_path: String, report: RunReport) -> void:
 	var script: GDScript = load(file_path)
-	if script == null:
+	# A script with a parse/type error is not guaranteed to make load()
+	# return null — it can come back as a non-null GDScript that simply
+	# can't be instantiated (can_instantiate() catches this; calling
+	# .new() on it directly logs a separate, noisier "Nonexistent
+	# function 'new'" script error instead of failing cleanly here).
+	if script == null or not script.can_instantiate():
 		_record_load_failure(file_path, "failed to load (parse or type error)", report)
 		return
 
 	var probe: Object = script.new()
-	if not (probe is AfterimageTestCase):
+	if probe == null or not (probe is AfterimageTestCase):
 		_record_load_failure(file_path, "does not extend AfterimageTestCase", report)
 		return
 
