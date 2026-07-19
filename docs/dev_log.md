@@ -160,3 +160,7 @@ The one failure was a test bug, not a system bug: `test_save_and_load_round_trip
 **Files added:** `src/sim/{vision_cone,ai_utility,ai_archetype,ai_agent,witness_system}.gd`, `tests/unit/{test_vision_cone,test_ai_utility,test_ai_archetype,test_ai_agent,test_witness_system}.gd`.
 
 **Files changed:** `docs/roadmap.md` (M1 Sentry/Professional and WitnessSystem items checked off with scope notes).
+
+**Confirmed green** ([run 29666164688](https://github.com/DanielDmas/Afterimage/actions/runs/29666164688), commit `5ddaea7`): both jobs `success`, test log reads `ALL PASSED (218/218)`. All 11 `test_vision_cone.gd` cases passed (including the exactly-on-the-cone-edge and both narrow/wide-cone inside/outside pairs derived from the exact-rational cos² values), and every `test_ai_utility.gd`, `test_ai_archetype.gd`, `test_ai_agent.gd`, and `test_witness_system.gd` case passed — including `test_just_spotted_outranks_engage_on_the_spotting_tick` and `test_professional_reports_on_first_sighting_then_engages`, which are exactly the pre-CI REPORT-vs-ENGAGE scoring bug fix this pass's summary called out. `gdlint`/`gdformat --check` clean on GitHub's infrastructure. **Pass 5 is closed.**
+
+---
