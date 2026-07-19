@@ -444,4 +444,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `docs/roadmap.md` (M4 Hub v1 item checked off with scope notes).
 
+**Confirmed green (commit `1ca88eb`):** CI run [29686979813](https://github.com/DanielDmas/Afterimage/actions/runs/29686979813) — both jobs `success`. Test log shows the literal `ALL PASSED (484/484)` with zero `[FAIL]` lines; confirmed all 5 `test_hub_calendar.gd` cases (including the AC's exact sleep-debt-week trace) and all 5 `test_mind_dashboard.gd` cases ran and passed by name in the raw log text. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`, `content_validator.py`, `dlgc.py`) also green.
+
 ---
