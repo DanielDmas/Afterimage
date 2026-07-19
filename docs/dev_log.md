@@ -344,4 +344,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `.github/workflows/ci.yml` (new lint-job step: `python3 tools/content_validator.py`), `docs/roadmap.md` (M4 Content validator v1 item annotated with Pass 13's foundational work, not checked off).
 
+**Confirmed green (commit `553804b`):** CI run [29680951250](https://github.com/DanielDmas/Afterimage/actions/runs/29680951250) — both jobs `success`, including the new "content package schema validation" lint step. Test log shows the literal `ALL PASSED (398/398)` with zero `[FAIL]` lines; confirmed all 6 `test_mission_loader.gd` cases and `test_mission_package.gd`'s case ran and passed by name in the raw log text — including real `res://` file loading via `FileAccess`/`JSON.parse_string()` and the `int()`-cast fix around Godot's float-only JSON number parsing, both unverifiable locally without a Godot binary and confirmed correct on the first push.
+
 ---
