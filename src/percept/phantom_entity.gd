@@ -11,10 +11,16 @@
 ## affect collision, damage, or any other truth outcome, because nothing
 ## under src/sim/ ever sees this data at all.
 ##
-## Tagged with this op instance's own negative `get_instance_id()` as the
-## phantom's `id`, so it can never collide with a real actor id (which
-## ActorRegistry always assigns starting at 1) and resolve_grounded() can
-## remove exactly the entity this op instance added.
+## Tagged with `-absi(get_instance_id())` as the phantom's `id`, so it can
+## never collide with a real actor id (which ActorRegistry always assigns
+## starting at 1) and resolve_grounded() can remove exactly the entity
+## this op instance added. The `absi()` wrap matters: Godot 4 sets an
+## internal flag bit on a RefCounted object's instance id that can read
+## back as already-negative in GDScript's signed 64-bit `int` — a bare
+## `-get_instance_id()` could double-negate back to positive for some
+## instances, which a CI run caught (a real Godot behavior no local
+## editor could have surfaced first). `absi()` first forces the sign
+## unconditionally, regardless of which way Godot's own convention goes.
 class_name PhantomEntity
 extends DistortionOp
 
@@ -51,7 +57,7 @@ func apply(snapshot: Dictionary) -> Dictionary:
 		actors
 		. append(
 			{
-				"id": -get_instance_id(),
+				"id": -absi(get_instance_id()),
 				"position": phantom_position,
 				"facing_dir": phantom_facing_dir,
 				"entity_kind": entity_kind,
@@ -68,7 +74,7 @@ func resolve_grounded(snapshot: Dictionary) -> Dictionary:
 	var out: Dictionary = snapshot.duplicate(true)
 	var actors: Array = []
 	for a: Dictionary in out.get("actors", []) as Array:
-		var is_mine: bool = a.get("is_phantom", false) and a.get("id") == -get_instance_id()
+		var is_mine: bool = a.get("is_phantom", false) and a.get("id") == -absi(get_instance_id())
 		if not is_mine:
 			actors.append(a)
 	out["actors"] = actors
