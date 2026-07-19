@@ -424,4 +424,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `docs/roadmap.md` (M4 Debrief v1 item checked off with scope notes).
 
+**Confirmed green (commit `cb042b5`):** CI run [29686754157](https://github.com/DanielDmas/Afterimage/actions/runs/29686754157) — both jobs `success`. Test log shows the literal `ALL PASSED (466/466)` with zero `[FAIL]` lines; confirmed all 5 `test_claim.gd`, 4 `test_claim_drafter.gd`, 10 `test_debrief_ledger.gd` (including the `MoralInjuryState` cross-directory integration tests — `src/debrief/` calling into `src/sim/` directly for the first time), and 2 `test_liar_bot.gd` cases ran and passed by name in the raw log text. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`, `content_validator.py`, `dlgc.py`) also green.
+
 ---
