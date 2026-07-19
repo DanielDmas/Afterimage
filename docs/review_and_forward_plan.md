@@ -16,6 +16,8 @@
 
 ## 2. Findings — ranked, each independently verified
 
+**Status update (post-arc "thesis demo" pass, see dev_log.md):** P1 (F2, F7, icon half of F13) and P2 (F3) are closed. P3's acceptance bar — Ground verb wired, one scripted drift, dual-view reveal, playable by a stranger in under two minutes — is met; the AI addition mentioned alongside it was left for later, as this doc's own P3 description allowed. F4 and F6 (originally scoped to P1) ended up delivered as part of P3 instead, since the reveal panel made `ReplayLog` recording load-bearing rather than optional. The palette half of F12 is also closed. F1, F5, F8, F9, F10, F11 (remaining), and F12 (settings persistence) remain open — see each finding below for current status.
+
 ### F1 — The Fairness Auditor cannot audit the content pipeline's actual decks (architectural seam, highest priority)
 `FairnessAuditor.validate()` requires entries exposing `fairness_tags`, `dramatic_intent`, and passing `entry is DistortionOp` (rule 6). But the deck the Director consumes — and the only deck shape the content pipeline produces (`mission.json` → `MissionLoader` → `DeckEntry`) — has **none of those fields** (`DeckEntry`: `op_class/tier/cost/variable_affinity` only). Verified: zero occurrences of `fairness_tags`/`dramatic_intent` anywhere in the deck-loading path; the auditor's own tests validate only hand-built op instances and `_FakeOp` doubles.
 
@@ -23,22 +25,22 @@
 
 **Fix direction (design, not code yet):** one `OpFactory` (op_class string → configured `DistortionOp`), used both (a) at runtime to instantiate purchases, and (b) by a new CI step that loads every `mission.json`, instantiates its full deck through the factory, and runs `FairnessAuditor.validate()` on the result. That makes the §10 promise real with one mechanism, and gives real ops their charter tags exactly once (in the op classes, where they already live).
 
-### F2 — CI never lints `scenes/` (tooling gap, trivial to close)
+### F2 — CI never lints `scenes/` (tooling gap, trivial to close) — **CLOSED**
 `ci.yml`'s lint job runs `gdlint src/ tests/` and `gdformat --check src/ tests/`. The new `scenes/` directory is invisible to it. It was linted locally before commit, but nothing prevents future drift. One-word fix per line in `ci.yml`.
 
-### F3 — The playable scene renders *truth* directly; the percept seam is bypassed
+### F3 — The playable scene renders *truth* directly; the percept seam is bypassed — **CLOSED**
 `scenes/main.gd::_update_visuals()` reads `_sim.player_position()` — truth-layer state — straight into pixels. Acceptable for a movement-only slice, but the entire premise of this game is that the render layer consumes `capture_percept_snapshot()` → `PerceptRenderer.render()` output, never truth. The moment the first distortion is wired in, this must flip — and it's cheaper to flip *now*, while the scene is 180 lines, than after HUD/combat/AI rendering accretes on the wrong side of the seam. Note: `tools/percept_truth_boundary_lint.py` only scans `src/percept/` (verified), so nothing mechanical stops `scenes/` from reading truth forever. Consider extending the lint with a rule for `scenes/`: rendering code may hold a `TruthSim` (it must, to step it) but should consume snapshots for display.
 
-### F4 — The playable scene doesn't record a `ReplayLog` (determinism contract unexercised where it matters most)
+### F4 — The playable scene doesn't record a `ReplayLog` (determinism contract unexercised where it matters most) — **CLOSED**
 tech_guidelines §3.1: the recorded frame stream + seed *is* the save and the Theater's source. `main.gd` builds `InputFrame`s and steps the sim correctly, but discards them — no `ReplayLog.record()`. Every browser session is therefore unreproducible, and the one place real human input finally exists feeds nothing into the replay/Theater machinery that 14+ passes built. Recording is ~3 lines; a "download replay JSON" debug button in the web build would additionally turn any player-encountered bug into a deterministic repro — the exact payoff the architecture was designed for.
 
 ### F5 — Event economy is publish-only: `GroundObserved` and `SuspicionEntryAdded` have zero subscribers
 Verified by grep: both are published (TruthSim, GossipSim) and consumed nowhere. The designed pipeline — Ground observed → suspicion entry → gossip propagation → org board — exists as disconnected segments. Each deferral was individually reasonable ("state now, consumer later"); collectively they mean the social-consequence loop has never run end to end, even in a test. **Suggested next step:** one integration test in the PrologueStub style that wires TruthSim's EventBus → a SuspicionGraph subscriber → GossipSim and proves one Ground-observed event lands as a decaying ledger entry.
 
-### F6 — `main.gd` doesn't pass an `EventBus` to `TruthSim`
+### F6 — `main.gd` doesn't pass an `EventBus` to `TruthSim` — **CLOSED**
 Related to F5 but distinct: the playable scene constructs `TruthSim.new(...)` without the optional `event_bus`, so even the events that *are* published go nowhere in the real build. Free to fix whenever the scene grows a consumer.
 
-### F7 — Export workflow dies on merge (branch filter) + Pages still off
+### F7 — Export workflow dies on merge (branch filter) + Pages still off — **branch filter CLOSED, Pages toggle still open**
 `export-web.yml` triggers only on `push` to `claude/afterimage-game-plan-uib3rh`. Merged to any other branch, the playable build silently stops updating. Also, the `deploy-pages` job still 404s until the repo owner enables **Settings → Pages → Source: GitHub Actions** (one-time manual toggle; the workflow artifact remains the fallback). Forward fix: trigger on the default branch too, keep `workflow_dispatch`.
 
 ### F8 — Dialogue content cannot reach the runtime

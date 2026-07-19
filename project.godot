@@ -30,7 +30,7 @@ config/tags=PackedStringArray("top-down", "action", "thriller", "2d")
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 boot_splash/show_image=false
-config/icon=""
+config/icon="res://icon.png"
 
 [display]
 

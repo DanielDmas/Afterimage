@@ -12,7 +12,7 @@ name: Export Web build
 
 on:
   push:
-    branches: ["claude/afterimage-game-plan-uib3rh"]
+    branches: ["main", "claude/afterimage-game-plan-uib3rh"]
   workflow_dispatch: {}
 
 env:
