@@ -215,4 +215,8 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `src/sim/{actor,truth_sim}.gd`, `docs/roadmap.md` (M1 graybox-room item checked off with scope notes; M1 exit-criterion note updated). `tests/unit/test_truth_sim.gd` ends up byte-identical to before — its Pass 7 additions were written there first, then moved wholesale to the new `test_truth_sim_combat.gd` once the file crossed gdlint's method-count limit.
 
+**CI found one real bug, and it was in the test, not the sim:** the first push (`1cc32d7`) failed a single test, `test_reload_restores_ammo_after_its_tick_count` — everything else, including the hand-traced two-tick combat outcome in `test_bot_harness.gd` (this pass's biggest unverified-until-CI assumption) and every other fire/reload/takedown/throw/focus wiring test, passed clean on the first try. The actual bug: `Weapon.advance_tick()` runs unconditionally every `step()` call, so the tick that *requests* reload already consumes its first countdown decrement — the test's timeline assumed `reload_ticks` further ticks were needed after the requesting tick, when it's `reload_ticks - 1`. Production code (`TruthSim`, `Weapon`) was correct throughout; only the test's own arithmetic was off by one. Fixed in `12d5367`.
+
+**Confirmed green** ([run 29678333376](https://github.com/DanielDmas/Afterimage/actions/runs/29678333376), commit `12d5367`): both jobs `success`, test log reads `ALL PASSED (289/289)`. `gdlint`/`gdformat --check` clean on GitHub's infrastructure. **Pass 7 is closed.**
+
 ---
