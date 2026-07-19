@@ -363,4 +363,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `docs/roadmap.md` (M2 Replay Theater v0 item checked off with scope notes).
 
+**Confirmed green (commit `b10bd3b`):** CI run [29681256238](https://github.com/DanielDmas/Afterimage/actions/runs/29681256238) — both jobs `success`. Test log shows the literal `ALL PASSED (409/409)` with zero `[FAIL]` lines; confirmed all 7 `test_replay_theater.gd` cases (including `test_truth_view_at_matches_independent_resimulation`, the real correctness proof) and all 4 `test_op_timeline_span.gd` cases ran and passed by name in the raw log text. The typed inline lambda scenario factory (`func() -> TruthSim: return TruthSim.new(...)` as a `Callable`) and the percept/truth boundary lint both held up exactly as designed. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`, `content_validator.py`) also green.
+
 ---
