@@ -291,3 +291,33 @@ func player_weapon_ammo() -> int:
 func player_weapon_is_reloading() -> bool:
 	var weapon: Weapon = _weapons[player_id]
 	return weapon.is_reloading()
+
+
+## Exports a read-only snapshot of truth state for the percept layer
+## (master_plan.md §5.2: "percept state (read-only views)"). Every field
+## is a plain value (int/bool/Vector2i) copied out of each Actor, never a
+## reference to the Actor itself — mutating the returned Dictionary
+## cannot reach back into this TruthSim's real state, which is what
+## actually makes "read-only" true rather than a naming convention.
+## `src/percept/`'s own code never references TruthSim/Actor by name at
+## all (enforced by tools/percept_truth_boundary_lint.py in CI) — this
+## method is the one, deliberate seam where truth hands data upward,
+## exactly as the architecture diagram's single arrow describes.
+func capture_percept_snapshot() -> Dictionary:
+	var actor_snapshots: Array = []
+	for id: int in actors.all_ids():
+		var a: Actor = actors.get_actor(id)
+		(
+			actor_snapshots
+			. append(
+				{
+					"id": a.id,
+					"position": a.position,
+					"facing_dir": a.facing_dir,
+					"radius_mm": a.radius_mm,
+					"hit_points": a.hit_points,
+					"is_alive": a.is_alive(),
+				}
+			)
+		)
+	return {"tick": clock.current_tick, "player_id": player_id, "actors": actor_snapshots}

@@ -34,7 +34,7 @@
 
 ## M2 — The Split (w13–17)
 *Exit: a phantom fools a playtester once, and the replay proves it.*
-- [ ] PerceptRenderer boundary (read-only truth views; op decorator pipeline) — **AC:** static check: no percept-path writes to truth (CI lint on module imports)
+- [x] PerceptRenderer boundary (read-only truth views; op decorator pipeline) — **AC:** static check: no percept-path writes to truth (CI lint on module imports) *(Pass 8: `TruthSim.capture_percept_snapshot()` (`src/sim/truth_sim.gd`) is the one seam where truth hands data upward, as plain values (int/bool/Vector2i) copied out of each Actor — never an Actor/TruthSim reference — so "read-only" is a type-shape guarantee, not just a naming convention. `src/percept/{percept_op,percept_renderer}.gd` is the decorator pipeline (`PerceptOp.apply()`, `PerceptRenderer.render()`), with no real ops yet (Pass 9's job — `SubtitleDrift` etc. need a real percept-side renderer to be worth building against). The AC's literal static check is `tools/percept_truth_boundary_lint.py`, wired into CI's lint job: it derives its denylist from every `class_name` under `src/sim/` at scan time (so it never goes stale) and fails if any `src/percept/` file references one — verified locally against both a clean pass and a deliberately-reintroduced violation before committing)*
 - [ ] Distortion shader library skeleton + photosensitivity caps (tech §4) — **AC:** caps unit-verified
 - [ ] Ops: `SubtitleDrift`, `AudioSwap`, `PhantomAudio`, `PhantomEntity` — **AC:** each op's Ground response + Theater disclosure works in the graybox
 - [ ] Ground verb (timings, costs, on-empty behavior, §4.6) — **AC:** input-hold + toggle variants; suspicion tick stub on observed Ground

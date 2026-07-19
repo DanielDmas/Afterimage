@@ -83,3 +83,6 @@ jobs:
 
       - name: gdformat --check (formatting must already match gdformat's output)
         run: gdformat --check src/ tests/
+
+      - name: percept/truth architecture boundary (master_plan.md §5.2)
+        run: python3 tools/percept_truth_boundary_lint.py
