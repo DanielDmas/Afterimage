@@ -65,14 +65,17 @@ func test_reload_restores_ammo_after_its_tick_count() -> void:
 	sim.step(InputFrame.new(1, {"fire": true, "aim_dir": Vector2i(1, 0)}))
 	assert_eq(sim.player_weapon_ammo(), capacity - 1)
 
+	# weapon.advance_tick() runs unconditionally every step(), so the tick
+	# that requests reload already consumes its first countdown tick —
+	# exactly reload_ticks-1 further ticks complete it, not reload_ticks.
 	sim.step(InputFrame.new(2, {"reload": true}))
 	assert_true(sim.player_weapon_is_reloading())
 
-	for i: int in range(reload_ticks - 1):
+	for i: int in range(reload_ticks - 2):
 		sim.step(InputFrame.new(3 + i, {}))
-	assert_true(sim.player_weapon_is_reloading(), "one tick left")
+	assert_true(sim.player_weapon_is_reloading(), "not finished yet")
 
-	sim.step(InputFrame.new(2 + reload_ticks, {}))
+	sim.step(InputFrame.new(1 + reload_ticks, {}))
 	assert_false(sim.player_weapon_is_reloading())
 	assert_eq(sim.player_weapon_ammo(), capacity)
 
