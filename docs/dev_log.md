@@ -404,4 +404,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `docs/roadmap.md` (M4 NPC minds/suspicion ledger/gossip tick item checked off with scope notes).
 
+**Confirmed green (commit `e16a709`):** CI run [29686489579](https://github.com/DanielDmas/Afterimage/actions/runs/29686489579) — both jobs `success`. Test log shows the literal `ALL PASSED (445/445)` with zero `[FAIL]` lines; confirmed all 5 `test_gossip_sim.gd` cases (including the seed=1 PRNG-vector-derived distortion test) and all 5 `test_suspicion_ledger.gd` cases (including the corrected day-35/day-42 decay arithmetic) ran and passed by name in the raw log text. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`, `content_validator.py`, `dlgc.py`) also green.
+
 ---
