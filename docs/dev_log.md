@@ -383,4 +383,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `.github/workflows/ci.yml` (new lint-job step: `python3 tools/dlgc.py`), `docs/roadmap.md` (M4 Dialogue DSL item checked off with scope notes).
 
+**Confirmed green (commit `453278e`):** CI run [29681644984](https://github.com/DanielDmas/Afterimage/actions/runs/29681644984) — both jobs `success`, including the new "dialogue DSL compile check" lint step. Test log shows the literal `ALL PASSED (427/427)` with zero `[FAIL]` lines; confirmed all 3 `test_dialogue_graph.gd`, all 8 `test_dialogue_runner.gd` (including both real prologue-scene branches), and all 7 `test_interrupt_memory.gd` cases (including both contradiction directions) ran and passed by name in the raw log text. The entire DSL/compiler/runtime/interrupt-memory pipeline — verified only via Python and hand-tracing before this push, never through an actual Godot interpreter — held up exactly as designed on the first try.
+
 ---
