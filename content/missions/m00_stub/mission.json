@@ -1,0 +1,37 @@
+{
+  "id": "mission.m00_stub",
+  "scene_type": "combat",
+  "mission_weights": {
+    "acute_stress": 1.0,
+    "fatigue": 0.5,
+    "moral_injury": 1.5,
+    "identity_strain": 0.2
+  },
+  "encounter_cap": 3,
+  "deck": [
+    {
+      "op_class": "AudioSwap",
+      "tier": 1,
+      "cost": 8,
+      "variable_affinity": ["acute_stress"]
+    },
+    {
+      "op_class": "PhantomAudio",
+      "tier": 1,
+      "cost": 8,
+      "variable_affinity": ["moral_injury"]
+    },
+    {
+      "op_class": "SubtitleDrift",
+      "tier": 1,
+      "cost": 5,
+      "variable_affinity": ["fatigue"]
+    },
+    {
+      "op_class": "PhantomEntity",
+      "tier": 3,
+      "cost": 25,
+      "variable_affinity": ["moral_injury", "identity_strain"]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://afterimages-vranov.internal/schemas/mission.schema.json",
+  "title": "Afterimage Mission Package (v1)",
+  "description": "tech_guidelines.md D7/§5.1: mission packages are JSON, one directory per mission, validated in CI against this schema. v1 scope (Pass 13) covers only the fields DistortionDirector and FairnessAuditor already consume — dialogue, NPC minds, debrief specs, and ending tables are later schemas (Passes 15-17), added as their own versioned files under this same directory per D7, not folded into this one.",
+  "type": "object",
+  "required": ["id", "scene_type", "mission_weights", "encounter_cap", "deck"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "tech_guidelines.md §5.2: namespaced domain.mission.local string ID.",
+      "pattern": "^mission\\.[a-z0-9_]+$"
+    },
+    "scene_type": {
+      "type": "string",
+      "description": "master_plan.md §4.3's four base scene types.",
+      "enum": ["social", "infiltration", "combat", "hub"]
+    },
+    "mission_weights": {
+      "type": "object",
+      "description": "master_plan.md §4.3's wv budget-formula weights, keyed by Mind Model variable name. A variable absent here contributes zero.",
+      "additionalProperties": false,
+      "properties": {
+        "acute_stress": { "type": "number", "minimum": 0 },
+        "fatigue": { "type": "number", "minimum": 0 },
+        "moral_injury": { "type": "number", "minimum": 0 },
+        "identity_strain": { "type": "number", "minimum": 0 }
+      }
+    },
+    "encounter_cap": {
+      "type": "integer",
+      "description": "FairnessAuditor Charter rule 7: must not exceed DistortionDirector.MAX_CONCURRENT_OPS (3).",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "deck": {
+      "type": "array",
+      "description": "master_plan.md §4.3's weighted purchasable deck.",
+      "items": {
+        "type": "object",
+        "required": ["op_class", "tier", "cost", "variable_affinity"],
+        "additionalProperties": false,
+        "properties": {
+          "op_class": {
+            "type": "string",
+            "description": "One of master_plan.md §4.2's ten taxonomy classes (FairnessAuditor.KNOWN_OP_CLASSES).",
+            "enum": [
+              "SubtitleDrift",
+              "AudioSwap",
+              "PhantomAudio",
+              "HUDGlitch",
+              "ObjectSwap",
+              "FamiliarFace",
+              "PhantomEntity",
+              "EntityMask",
+              "GeometrySwap",
+              "TimeGap",
+              "MemoryEdit"
+            ]
+          },
+          "tier": { "type": "integer", "minimum": 1, "maximum": 4 },
+          "cost": { "type": "integer", "minimum": 0 },
+          "variable_affinity": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["acute_stress", "fatigue", "moral_injury", "identity_strain"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

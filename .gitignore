@@ -9,6 +9,10 @@ export_presets.cfg
 .DS_Store
 Thumbs.db
 
+# Python bytecode cache (tools/*.py are run directly via python3, never installed)
+__pycache__/
+*.pyc
+
 # Local override files that must never carry secrets or machine-specific state
 *.local
 .env

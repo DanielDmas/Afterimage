@@ -86,3 +86,6 @@ jobs:
 
       - name: percept/truth architecture boundary (master_plan.md §5.2)
         run: python3 tools/percept_truth_boundary_lint.py
+
+      - name: content package schema validation (tech_guidelines.md D7/§5.1)
+        run: python3 tools/content_validator.py
