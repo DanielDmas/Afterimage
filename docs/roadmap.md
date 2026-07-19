@@ -2,6 +2,8 @@
 **Document type:** Milestone backlog with acceptance criteria. Companion to `master_plan.md` §9 (which owns the milestone narrative and calendar); this file turns it into checkable work.
 **Usage:** items are checked off in commits as they land; an item is *done* only when its acceptance criterion passes in CI or in a recorded playtest. Scope changes to a milestone are amendments here, made at milestone boundaries. This file is the day-to-day truth of "where are we."
 
+**Engineering arc status (Pass 20, closing note):** the 20-pass engineering arc (`docs/dev_log.md`) is complete — every mechanism M0–M4 needed is built and green (512 tests), including Pass 20's integration capstone (`src/integration/prologue_stub.gd`), which plays a full Ground-tutorial-through-debrief scripted scenario end to end. The `[ ]` items still open below are, without exception, blocked on real art/audio/content production, a human judgment call, real hardware, or an actual Godot editor session — never on a missing mechanism. See `docs/dev_log.md`'s closing section ("The 20-pass arc: closed") for the full accounting.
+
 ---
 
 ## Definition of Ready to Code (all true before M0 begins)
