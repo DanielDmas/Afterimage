@@ -107,3 +107,41 @@ func test_hub_rest_floor_never_lowers_a_higher_value() -> void:
 		state.gain_entering_combat()  # 40
 	state.apply_hub_rest_floor(FixedMath.from_int(18))
 	assert_eq(state.value_fx(), FixedMath.from_int(40))
+
+
+## §4.4.5's stimulant cost: "acute-stress gains ×1.25" — 8 x 1.25 = 10
+## exactly (1.25 = 5/4 and Q16.16's SCALE=65536 is divisible by 4, so this
+## is exact fixed-point arithmetic, not an approximation).
+func test_gain_multiplier_inflates_every_gain_method() -> void:
+	var state := AcuteStressState.new()
+	assert_eq(state.gain_multiplier_fx(), FixedMath.ONE)
+
+	state.set_gain_multiplier_fx(FixedMath.from_float(1.25))
+	state.gain_entering_combat()  # 8 x 1.25 = 10
+	assert_eq(state.value_fx(), FixedMath.from_int(10))
+
+
+func test_clear_gain_multiplier_restores_normal_gains() -> void:
+	var state := AcuteStressState.new()
+	state.set_gain_multiplier_fx(FixedMath.from_float(1.25))
+	state.clear_gain_multiplier()
+	assert_eq(state.gain_multiplier_fx(), FixedMath.ONE)
+
+	state.gain_entering_combat()  # unmultiplied: 8
+	assert_eq(state.value_fx(), FixedMath.from_int(8))
+
+
+## The multiplier must never apply to relief or passive decay — only to
+## gains. A 2x multiplier active throughout still leaves
+## relieve_ground_completed()'s -8 untouched.
+func test_gain_multiplier_never_applies_to_relief_or_decay() -> void:
+	var state := AcuteStressState.new()
+	state.set_gain_multiplier_fx(FixedMath.from_int(2))
+	state.gain_entering_combat()  # 8 x 2 = 16
+	assert_eq(state.value_fx(), FixedMath.from_int(16))
+
+	state.relieve_ground_completed()  # -8, unmultiplied
+	assert_eq(state.value_fx(), FixedMath.from_int(8))
+
+	state.advance_ticks(30, AcuteStressState.Zone.SAFE)  # -0.4 over 1s, unmultiplied
+	assert_eq(state.value_fx(), FixedMath.from_int(8) - FixedMath.from_float(0.4))

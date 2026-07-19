@@ -27,6 +27,13 @@ const _MAX_FX: int = 6553600
 
 var _value_fx: int = 0
 
+## §4.4.5's stimulant aftermath: "acute-stress gains ×1.25" — FixedMath.ONE
+## (no inflation) unless a caller (SubstanceModel) has raised it. Applies
+## only to the gain_* methods below, never to relieve_ground_completed()
+## (a relief, not a gain) or advance_tick()/advance_ticks() (passive decay,
+## not something the stimulant's cost inflates).
+var _gain_multiplier_fx: int = FixedMath.ONE
+
 
 static func _trunc_div(a: int, b: int) -> int:
 	var quotient: int = absi(a) / absi(b)
@@ -48,28 +55,51 @@ func _add_fx(delta_fx: int) -> void:
 	_value_fx = clampi(_value_fx + delta_fx, _MIN_FX, _MAX_FX)
 
 
+## Every gain_* method routes its named constant through this instead of
+## calling _add_fx() directly, so the stimulant multiplier applies
+## uniformly without each gain method having to know it exists.
+func _add_gain_fx(base_amount: int) -> void:
+	_add_fx(FixedMath.mul(FixedMath.from_int(base_amount), _gain_multiplier_fx))
+
+
+func gain_multiplier_fx() -> int:
+	return _gain_multiplier_fx
+
+
+## §4.4.5's stimulant cost: inflate every future stress gain by this
+## multiplier (Q16.16; ONE = no change) until clear_gain_multiplier() is
+## called. Setting it again before clearing simply replaces it — there is
+## no stacking rule to honor since only one stimulant multiplier exists.
+func set_gain_multiplier_fx(multiplier_fx: int) -> void:
+	_gain_multiplier_fx = multiplier_fx
+
+
+func clear_gain_multiplier() -> void:
+	_gain_multiplier_fx = FixedMath.ONE
+
+
 func gain_entering_combat() -> void:
-	_add_fx(FixedMath.from_int(GAIN_ENTERING_COMBAT))
+	_add_gain_fx(GAIN_ENTERING_COMBAT)
 
 
 func gain_gunfire_in_earshot() -> void:
-	_add_fx(FixedMath.from_int(GAIN_GUNFIRE_IN_EARSHOT))
+	_add_gain_fx(GAIN_GUNFIRE_IN_EARSHOT)
 
 
 func gain_near_discovery() -> void:
-	_add_fx(FixedMath.from_int(GAIN_NEAR_DISCOVERY))
+	_add_gain_fx(GAIN_NEAR_DISCOVERY)
 
 
 func gain_witnessing_kill() -> void:
-	_add_fx(FixedMath.from_int(GAIN_WITNESSING_KILL))
+	_add_gain_fx(GAIN_WITNESSING_KILL)
 
 
 func gain_acting_on_believed_phantom() -> void:
-	_add_fx(FixedMath.from_int(GAIN_ACTING_ON_BELIEVED_PHANTOM))
+	_add_gain_fx(GAIN_ACTING_ON_BELIEVED_PHANTOM)
 
 
 func gain_focus_use() -> void:
-	_add_fx(FixedMath.from_int(GAIN_FOCUS_USE))
+	_add_gain_fx(GAIN_FOCUS_USE)
 
 
 func relieve_ground_completed() -> void:

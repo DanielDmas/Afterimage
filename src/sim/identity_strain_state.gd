@@ -9,6 +9,7 @@ const GAIN_DAY_IN_COVER: int = 1
 const GAIN_RADEK_SKILL_CHECK_PASSED: int = 2
 const GAIN_RADEK_METHOD_ACT: int = 4
 const GAIN_ARGUS_MONEY_PERSONAL_COMFORT: int = 2
+const GAIN_ALCOHOL_USE: int = 2  # §4.4.5: "+2 identity strain" per drink
 const DECAY_ELISKA_ANCHOR_ACT: int = -3
 
 const _MIN_FX: int = 0
@@ -39,6 +40,10 @@ func gain_radek_method_act() -> void:
 
 func gain_argus_money_personal_comfort() -> void:
 	_add_fx(FixedMath.from_int(GAIN_ARGUS_MONEY_PERSONAL_COMFORT))
+
+
+func gain_alcohol_use() -> void:
+	_add_fx(FixedMath.from_int(GAIN_ALCOHOL_USE))
 
 
 func decay_eliska_anchor_act() -> void:

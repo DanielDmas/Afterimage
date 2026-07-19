@@ -35,3 +35,10 @@ func test_clamps_at_100_and_0() -> void:
 	var low := IdentityStrainState.new()
 	low.decay_eliska_anchor_act()  # -3 from a floor of 0
 	assert_eq(low.value_fx(), 0)
+
+
+## §4.4.5: alcohol at an Argus social costs +2 identity strain per drink.
+func test_gain_alcohol_use() -> void:
+	var state := IdentityStrainState.new()
+	state.gain_alcohol_use()
+	assert_eq(state.value_fx(), FixedMath.from_int(2))

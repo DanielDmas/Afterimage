@@ -241,3 +241,50 @@ func test_purchase_log_returns_a_copy_not_a_live_reference() -> void:
 	var log_copy: Array = director.purchase_log()
 	log_copy.clear()
 	assert_eq(director.purchase_log().size(), 1)
+
+
+## §4.4.5's alcohol clause: seed=0's first draw (3413504692, test_prng.gd's
+## own pinned vector) is even, so `% 2` selects index 0 among the two
+## tier-1 entries (indices 0 and 2 in this 3-entry deck) — the first one,
+## "SubtitleDrift". No budget is spent: authorize_free_tier() never earns
+## anything, it authorizes for free.
+func test_authorize_free_tier_picks_uniformly_among_the_requested_tier() -> void:
+	var deck: Array[DeckEntry] = [
+		DeckEntry.new("SubtitleDrift", 1, 5, []),
+		DeckEntry.new("AudioSwap", 2, 5, []),
+		DeckEntry.new("PhantomAudio", 1, 5, []),
+	]
+	var director := DistortionDirector.new(0)
+	director.budget = 0
+	var record: Dictionary = director.authorize_free_tier(deck, 1, 42)
+
+	assert_eq(record["op_class"], "SubtitleDrift")
+	assert_eq(record["tier"], 1)
+	assert_eq(record["cost"], 0)
+	assert_true(record["authorized"])
+	assert_eq(director.budget, 0)
+	assert_eq(director.active_op_count(), 1)
+
+
+func test_authorize_free_tier_respects_the_global_density_cap() -> void:
+	var deck: Array[DeckEntry] = [
+		DeckEntry.new("SubtitleDrift", 1, 0, []),
+		DeckEntry.new("AudioSwap", 1, 0, []),
+		DeckEntry.new("PhantomAudio", 1, 0, []),
+	]
+	var director := DistortionDirector.new(0)
+	for i: int in range(DistortionDirector.MAX_CONCURRENT_OPS):
+		var record: Dictionary = director.authorize_free_tier(deck, 1, i)
+		assert_false(record.is_empty())
+	assert_eq(director.active_op_count(), DistortionDirector.MAX_CONCURRENT_OPS)
+
+	var blocked: Dictionary = director.authorize_free_tier(deck, 1, 999)
+	assert_true(blocked.is_empty())
+
+
+func test_authorize_free_tier_returns_empty_when_no_entry_matches_the_tier() -> void:
+	var deck: Array[DeckEntry] = [DeckEntry.new("AudioSwap", 2, 5, [])]
+	var director := DistortionDirector.new(0)
+	var record: Dictionary = director.authorize_free_tier(deck, 1, 0)
+	assert_true(record.is_empty())
+	assert_eq(director.active_op_count(), 0)

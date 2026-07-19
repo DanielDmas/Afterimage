@@ -46,3 +46,27 @@ func test_clamps_at_100() -> void:
 	for _i: int in range(10):
 		state.gain_skipped_sleep_block()  # 10 x 12 = 120, past 100
 	assert_eq(state.value_fx(), FixedMath.from_int(100))
+
+
+## §4.4.5's stimulant aftermath: a temporary floor raises the value
+## immediately if it's currently below the floor (the same raise-only
+## contract AcuteStressState.apply_hub_rest_floor() already established),
+## and even a full sleep block (-40) can't push fatigue below the floor
+## while it's active.
+func test_temporary_floor_raises_current_value_and_blocks_decay_below_it() -> void:
+	var state := FatigueState.new()
+	state.set_temporary_floor(FixedMath.from_int(10))
+	assert_eq(state.value_fx(), FixedMath.from_int(10))
+
+	state.apply_sleep_full_block()  # -40, would clamp to 0 without the floor
+	assert_eq(state.value_fx(), FixedMath.from_int(10))
+
+
+func test_clearing_temporary_floor_does_not_itself_reduce_the_value() -> void:
+	var state := FatigueState.new()
+	state.set_temporary_floor(FixedMath.from_int(10))
+	state.clear_temporary_floor()
+	assert_eq(state.value_fx(), FixedMath.from_int(10))
+
+	state.apply_sleep_full_block()  # -40, now clamps to the permanent floor of 0
+	assert_eq(state.value_fx(), 0)

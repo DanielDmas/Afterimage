@@ -21,11 +21,16 @@
 ## band state.
 ##
 ## Substance/tool modifiers (§4.4.5 — stimulant/alcohol/sedative tradeoffs)
-## are deliberately out of scope here: they need a multi-day "effect window"
-## (the stimulant's 3-day fatigue-floor-and-stress-multiplier aftermath)
-## that only a real hub calendar (Pass 18) can drive, and they're their own
-## roadmap.md M3 line item, not part of this pass's "four variables +
-## worked-example fixtures" scope.
+## were deliberately out of scope for this class's original pass: they
+## needed a multi-day "effect window" (the stimulant's 3-day
+## fatigue-floor-and-stress-multiplier aftermath) that only a real hub
+## calendar (Pass 18) could drive. That calendar now exists, and
+## `SubstanceModel` (src/sim/substance_model.gd) implements the tradeoffs
+## as a small orchestrator alongside these four state classes — following
+## the same "sequence calls, don't duplicate the math" discipline
+## HubCalendar itself established, and adding exactly two new generic
+## primitives (FatigueState's temporary floor, AcuteStressState's gain
+## multiplier) that no existing class had.
 class_name MindModel
 extends RefCounted
 

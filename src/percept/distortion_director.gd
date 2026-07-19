@@ -220,3 +220,43 @@ func purchase_one(
 	}
 	_purchase_log.append(record)
 	return record
+
+
+## §4.4.5's alcohol clause: "one random tier-1 op authorized for the
+## scene" — bypasses the budget/weight gate entirely (this op is
+## authorized, not earned), picking uniformly at random via this
+## Director's own seeded stream among deck entries at exactly `tier` so
+## the determinism guarantee (§4.3: "same seed, same purchase sequence")
+## extends to this path too. Still respects the density cap (Charter rule
+## 7 is a hard cap, not a budget-gated one) — a saturated encounter gains
+## no fourth op just because a drink was poured. Returns the authorized
+## record (with "authorized": true so Theater/debrief disclosure, Charter
+## rule 8, never conflates an authorized op with a purchased one), or an
+## empty Dictionary if the cap is already full or no entry at that tier
+## exists in this deck.
+func authorize_free_tier(deck: Array[DeckEntry], tier: int, current_tick: int) -> Dictionary:
+	if _active_op_count >= MAX_CONCURRENT_OPS:
+		return {}
+
+	var eligible_indices: Array[int] = []
+	for i: int in range(deck.size()):
+		if deck[i].tier == tier:
+			eligible_indices.append(i)
+	if eligible_indices.is_empty():
+		return {}
+
+	var pick: int = _rng.next_range_int(0, eligible_indices.size() - 1)
+	var chosen: DeckEntry = deck[eligible_indices[pick]]
+
+	_active_op_count += 1
+	if chosen.tier >= TIER_SPACING_MIN_TIER:
+		_last_tier_spacing_purchase_tick = current_tick
+	var record: Dictionary = {
+		"tick": current_tick,
+		"op_class": chosen.op_class,
+		"tier": chosen.tier,
+		"cost": 0,
+		"authorized": true,
+	}
+	_purchase_log.append(record)
+	return record
