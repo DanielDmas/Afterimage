@@ -24,8 +24,18 @@ enum Side { LEFT, RIGHT }
 ## `facing_dir` must be a unit cardinal direction (exactly one axis
 ## nonzero, magnitude 1) — asserted, since a diagonal or scaled facing has
 ## no single well-defined "90° lateral" answer under this simplified model.
+##
+## `side` is typed `int`, not `Side`, despite `Side` existing right above:
+## a static method's parameter typed with its own class's bare (unqualified)
+## inner-enum name does not unify, under Godot 4.3's static type checker,
+## with the fully-qualified `Lean.Side` a caller in a different file
+## necessarily writes — a real parse error CI caught ("Cannot pass a value
+## of type 'Lean.Side' as 'Side'") that no local Godot editor could have
+## surfaced first. Enums are plain ints underneath, so relaxing the
+## parameter to `int` sidesteps the mismatch entirely while `Side.LEFT`/
+## `Side.RIGHT` stay the named constants callers pass.
 static func peek_origin(
-	actor_pos: Vector2i, facing_dir: Vector2i, side: Side, offset_mm: int
+	actor_pos: Vector2i, facing_dir: Vector2i, side: int, offset_mm: int
 ) -> Vector2i:
 	assert(
 		absi(facing_dir.x) + absi(facing_dir.y) == 1,
