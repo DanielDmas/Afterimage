@@ -236,4 +236,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `src/sim/truth_sim.gd` (+`capture_percept_snapshot()`), `.github/workflows/ci.yml` (new lint step), `docs/roadmap.md` (M2 PerceptRenderer-boundary item checked off).
 
+**Confirmed green** ([run 29678619077](https://github.com/DanielDmas/Afterimage/actions/runs/29678619077), commit `8160d33`): both jobs `success` — the lint job's new "percept/truth architecture boundary" step passed specifically, not just the job as a whole — and the test log reads `ALL PASSED (297/297)`. `test_truth_sim_percept.gd`'s `test_mutating_the_returned_snapshot_does_not_affect_truth_sim` (the core read-only guarantee) and every `test_percept_op.gd`/`test_percept_renderer.gd` case passed clean on the first push — no fix-forward needed this time. `gdlint`/`gdformat --check` clean on GitHub's infrastructure. **Pass 8 is closed.**
+
 ---
