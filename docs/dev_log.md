@@ -465,4 +465,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `docs/roadmap.md` (M6 accessibility-pass item annotated with Pass 19's foundational work, not checked off).
 
+**Confirmed green (commit `2c692c7`):** CI run [29687305247](https://github.com/DanielDmas/Afterimage/actions/runs/29687305247) — both jobs `success`. Test log shows the literal `ALL PASSED (506/506)` with zero `[FAIL]` lines; confirmed all 4 `test_theme_palette.gd` cases (including the first-ever `Color(hex_string)` parsing anywhere in this codebase) and all 4 `test_mind_dashboard_screen.gd` integration cases ran and passed by name in the raw log text. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`, `content_validator.py`, `dlgc.py`) also green. Choosing data over `.tscn`/`.tres` files paid off exactly as reasoned — nothing here risked the project-wide import step.
+
 ---
