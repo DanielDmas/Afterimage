@@ -278,4 +278,6 @@ None of this is scoped to combat verbs specifically — it's foundational test-i
 
 **Files changed:** `src/sim/truth_sim.gd` (Ground wiring, `GROUND_OBSERVED_SUSPICION_WEIGHT`, snapshot fields), `src/percept/percept_renderer.gd` (`resolve_grounded()` dispatch), `tests/unit/test_percept_renderer.gd` (+3 tests), `docs/roadmap.md` (M2 Ground/Clarity Mode items checked off with scope notes).
 
+**Confirmed green (commit `737827f`):** CI run [29679484445](https://github.com/DanielDmas/Afterimage/actions/runs/29679484445) — both jobs `success`. Test job log shows the literal `Afterimage test run — 45 suite(s), 340 test(s), 7517 assertion(s)` and `ALL PASSED (340/340)`; confirmed all six `test_truth_sim_ground.gd` cases (movement/fire blocked while grounding, `GroundCompleted`-unseen, `GroundObserved`-seen with correct suspicion weight, use-count-increments-regardless-of-observation, early-release-resets, snapshot flags) and all five new `test_percept_renderer.gd` grounded-dispatch cases ran and passed by name in the raw log text, not just the aggregate count. The lone `ERROR: ... failed to load (parse or type error)` line in the log is the intentional Pass 6 `test_broken_type_reference.gd` fixture, not a regression. Lint job (`gdlint`, `gdformat --check`, `percept_truth_boundary_lint.py`) also green.
+
 ---
