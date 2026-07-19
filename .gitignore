@@ -2,8 +2,14 @@
 .godot/
 .import/
 export.cfg
-export_presets.cfg
 *.translation
+
+# export_presets.cfg IS committed (tracked below in build/ builds, this file
+# itself is not build output): it holds no secrets, only preset definitions,
+# and CI's export-web.yml workflow needs it to know the Web preset exists at
+# all. Only .godot/export_credentials.cfg (already covered by .godot/ above)
+# is the actually-sensitive half of Godot's export config split.
+build/
 
 # Editor/OS cruft
 .DS_Store

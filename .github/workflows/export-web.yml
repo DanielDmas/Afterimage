@@ -1,0 +1,112 @@
+name: Export Web build
+
+# Separate from ci.yml (the test/lint gate) on purpose: this workflow
+# builds and (attempts to) publish a playable HTML5 export of
+# scenes/main.tscn — the project's first Node-based scene. Godot's own
+# editor/export templates aren't available in the authoring sandbox this
+# repo is otherwise developed in (no local display, and the org's egress
+# policy blocks direct downloads from github.com/tuxfamily.org there), but
+# GitHub Actions runners have full internet access, so the actual export
+# happens here instead. A failure in this workflow never affects ci.yml's
+# green status — the two are independent.
+
+on:
+  push:
+    branches: ["claude/afterimage-game-plan-uib3rh"]
+  workflow_dispatch: {}
+
+env:
+  GODOT_VERSION: "4.3-stable"
+  GODOT_ARCHIVE: "Godot_v4.3-stable_linux.x86_64.zip"
+  GODOT_BIN: "Godot_v4.3-stable_linux.x86_64"
+  GODOT_TEMPLATES_ARCHIVE: "Godot_v4.3-stable_export_templates.tpz"
+  GODOT_TEMPLATE_VERSION_DIR: "4.3.stable"
+
+jobs:
+  build-web:
+    name: Build HTML5/Web export
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Cache Godot editor + export templates
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64-with-templates
+
+      - name: Download Godot editor + Web export templates
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ github.workspace }}/.godot-bin"
+          cd "${{ github.workspace }}/.godot-bin"
+
+          curl -fL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_ARCHIVE}"
+          unzip -q godot.zip
+          chmod +x "${GODOT_BIN}"
+
+          # Self-contained mode (docs.godotengine.org/en/4.3/tutorials/io/data_paths.html):
+          # a ._sc_ marker file next to the binary makes Godot read/write all
+          # editor data (including export templates) from ./editor_data/
+          # right here, instead of ~/.local/share/godot/ — keeping everything
+          # inside this cached, workspace-relative directory.
+          touch ._sc_
+
+          curl -fL -o templates.tpz \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_TEMPLATES_ARCHIVE}"
+          mkdir -p editor_data/export_templates
+          unzip -q templates.tpz -d _templates_extract
+          mv _templates_extract/templates "editor_data/export_templates/${GODOT_TEMPLATE_VERSION_DIR}"
+          rm -rf _templates_extract templates.tpz
+
+      - name: Sanity-check the binary and print its version
+        run: |
+          set -euo pipefail
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" --headless --version
+          echo "--- installed export template versions ---"
+          ls "${{ github.workspace }}/.godot-bin/editor_data/export_templates/"
+
+      - name: Import project (builds the global class_name cache)
+        run: |
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" \
+            --headless --path . --editor --quit || true
+
+      - name: Export Web build
+        run: |
+          set -euo pipefail
+          mkdir -p build/web
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" \
+            --headless --path . --export-release "Web" build/web/index.html
+          echo "--- build/web contents ---"
+          ls -la build/web
+
+      - name: Upload build as a workflow artifact (always available, Pages or not)
+        uses: actions/upload-artifact@v4
+        with:
+          name: afterimage-web-build
+          path: build/web
+          if-no-files-found: error
+
+      - name: Upload build for GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: build-web
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
