@@ -14,6 +14,7 @@ extends RefCounted
 const DEFAULT_PLAYER_HIT_POINTS: int = 3  # master_plan §4.9: "player takes 2-4 hits"
 const DEFAULT_AI_HIT_POINTS: int = 2  # master_plan §4.9: "enemies take 1-3"
 const HIT_DAMAGE: int = 1  # v0 simplification: every resolved hit costs exactly 1 hit point
+const GROUND_OBSERVED_SUSPICION_WEIGHT: int = 2  # master_plan §4.7's own example weight
 
 var clock: FixedTickClock
 var grid: CollisionGrid
@@ -24,6 +25,7 @@ var _event_bus: EventBus
 var _ai_agents: Dictionary = {}  ## int actor_id -> AiAgent
 var _weapons: Dictionary = {}  ## int actor_id -> Weapon
 var _focus: FocusState
+var _ground: GroundState
 var _last_tick_sound_events: Array = []
 
 
@@ -42,6 +44,7 @@ func _init(
 	_event_bus = event_bus
 	_weapons[player_id] = Weapon.cz75()
 	_focus = FocusState.new()
+	_ground = GroundState.new()
 
 
 ## Spawns an AI-controlled Actor with its own AiAgent (Pass 5) and a
@@ -65,23 +68,32 @@ func spawn_ai(
 	return id
 
 
-## Advances the sim by exactly one tick, applying one InputFrame: player
-## movement and combat verbs, then every AI actor's perception and (v0)
-## reaction. A tick's noise events (sprint, gunfire, a landed throw) are
-## collected as they happen and offered to every AI actor's hearing check
-## the same tick they occur — same-tick reaction is a v0 simplification;
-## real audio propagation delay is a presentation-layer concern with
-## nothing to attach to before a real level exists. The same list is kept
-## for capture_percept_snapshot() (Pass 9's "sound_events") — each entry
+## Advances the sim by exactly one tick, applying one InputFrame: the
+## Ground verb's hold-duration gate (§4.6), then — only if Ground isn't
+## being requested this tick — player movement and combat verbs, then
+## every AI actor's perception and (v0) reaction regardless. A tick's
+## noise events (sprint, gunfire, a landed throw) are collected as they
+## happen and offered to every AI actor's hearing check the same tick
+## they occur — same-tick reaction is a v0 simplification; real audio
+## propagation delay is a presentation-layer concern with nothing to
+## attach to before a real level exists. The same list is kept for
+## capture_percept_snapshot() (Pass 9's "sound_events") — each entry
 ## also carries a "tag" and "source_id" the AI hearing check never
 ## needed, added for percept's benefit (AudioSwap/PhantomAudio, §4.2).
 func step(frame: InputFrame) -> void:
 	clock.advance()
+	var ground_requested: bool = bool(frame.inputs.get("ground", false))
+	_ground.advance_tick(ground_requested)
+
 	var noise_events: Array = []
-	_resolve_player_movement(frame, noise_events)
-	_resolve_player_combat(frame, noise_events)
+	if not ground_requested:
+		_resolve_player_movement(frame, noise_events)
+		_resolve_player_combat(frame, noise_events)
 	_resolve_ai_ticks(noise_events)
 	_last_tick_sound_events = noise_events
+
+	if _ground.just_completed():
+		_resolve_ground_completion()
 
 
 ## Reads "move_x"/"move_y" as a raw per-tick millimeter delta request —
@@ -252,6 +264,59 @@ func _resolve_ai_ticks(noise_events: Array) -> void:
 		weapon.advance_tick()
 
 
+## master_plan §4.6: Ground "resolves all active ops in scope
+## simultaneously" — that half is percept's job, via PerceptRenderer
+## reading "ground_just_completed" off this tick's snapshot (see
+## capture_percept_snapshot()'s class doc). On the truth side, this
+## checks whether the moment was observed: "if observed by an Argus NPC
+## in a social scene, a suspicion entry (weight 2)." No social-NPC system
+## exists yet (Pass 16+), so "observed" is checked the same way Pass 7's
+## AI perception already works — a fresh VisionCone+LineOfSight query
+## against whichever actors can currently see the player, deliberately
+## not routed through AiAgent.perceive_and_decide() so checking "was I
+## seen while grounding" never mutates an agent's own memory/decision
+## state as a side effect. Published as stub events for a future
+## SuspicionGraph to consume — "state now, consumer later," the same
+## pattern as every prior pass's own deferred wiring. "On empty" (§4.6:
+## grounding when nothing is distorted "still tells you something true")
+## falls out for free: GroundCompleted always publishes on completion,
+## regardless of whether anything was actually active to resolve.
+func _resolve_ground_completion() -> void:
+	var player: Actor = actors.get_actor(player_id)
+	var observed_by: int = -1
+	for id: int in actors.all_ids():
+		if id == player_id or not _ai_agents.has(id):
+			continue
+		var ai_actor: Actor = actors.get_actor(id)
+		if not ai_actor.is_alive():
+			continue
+		var agent: AiAgent = _ai_agents[id]
+		var can_see: bool = (
+			VisionCone.point_in_cone(
+				ai_actor.position,
+				agent.facing_dir,
+				agent.archetype.vision_cos_sq_half_angle_fx,
+				agent.archetype.vision_range_mm,
+				player.position
+			)
+			and LineOfSight.has_clear_line(ai_actor.position, player.position, grid)
+		)
+		if can_see:
+			observed_by = id
+			break
+
+	if not _event_bus:
+		return
+	_event_bus.publish("GroundCompleted", {"observed_by": observed_by}, null, clock.current_tick)
+	if observed_by != -1:
+		_event_bus.publish(
+			"GroundObserved",
+			{"observer_id": observed_by, "suspicion_weight": GROUND_OBSERVED_SUSPICION_WEIGHT},
+			null,
+			clock.current_tick
+		)
+
+
 func _apply_hit(target_id: int, damage: int = HIT_DAMAGE) -> void:
 	var target: Actor = actors.get_actor(target_id)
 	target.apply_damage(damage)
@@ -312,6 +377,14 @@ func focus_activation_count() -> int:
 	return _focus.activation_count
 
 
+func is_grounding() -> bool:
+	return _ground.is_holding()
+
+
+func ground_use_count() -> int:
+	return _ground.use_count
+
+
 func player_weapon_ammo() -> int:
 	var weapon: Weapon = _weapons[player_id]
 	return weapon.ammo_in_magazine
@@ -336,6 +409,10 @@ func player_weapon_is_reloading() -> bool:
 ## "sound_events" (Pass 9) is this same tick's noise events (sprint,
 ## gunfire, a landed throw — see step()'s class doc), the real truth
 ## source AudioSwap/PhantomAudio (master_plan §4.2) operate on.
+##
+## "ground_just_completed" (Pass 10) is the signal PerceptRenderer reads
+## to call resolve_grounded() instead of apply() on every active op this
+## tick (§4.6: "resolves all active ops in scope simultaneously").
 func capture_percept_snapshot() -> Dictionary:
 	var actor_snapshots: Array = []
 	for id: int in actors.all_ids():
@@ -358,4 +435,6 @@ func capture_percept_snapshot() -> Dictionary:
 		"player_id": player_id,
 		"actors": actor_snapshots,
 		"sound_events": _last_tick_sound_events.duplicate(true),
+		"ground_just_completed": _ground.just_completed(),
+		"ground_is_holding": _ground.is_holding(),
 	}
