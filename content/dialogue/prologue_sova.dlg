@@ -1,0 +1,38 @@
+# Prologue — "Cold Open" (master_plan.md §2.6, story_bible.md §prologue).
+# Dr. Sova teaches Ground diegetically; ends with one scripted misheard
+# line, immediately disclosed. Pass 15 v0 scope: proves the DSL/compiler/
+# runtime pipeline end-to-end, not the full authored prologue.
+
+START node_briefing
+
+== node_briefing ==
+npc.sova: Before we start, a simple exercise. Hold still, hold quiet, and tell me what's true.
++claim.sova_taught_ground
+
+-> node_choice
+
+== node_choice ==
+npc.sova: Tell me — what did you hear just now, down the hall?
+choice "The heating pipes, ticking." [procedural] -> node_pipes
+choice "Footsteps. Someone was there." [pressing] -> node_footsteps
+
+== node_pipes ==
+player: The heating pipes, ticking.
++claim.player_heard(player, heard_sound, heating_pipes)
+npc.sova: Correct. Ground told you the truth before I even had to.
+
+-> node_close
+
+== node_footsteps ==
+player: Footsteps. Someone was there.
++claim.player_heard(player, heard_sound, footsteps)
+drift: "Footsteps. Someone was there." [doubt]
+npc.sova: There was no one in that hall. That's the lesson — not everything you hear is real.
+
+-> node_close
+
+== node_close ==
+npc.sova: Ground when you doubt. It costs you time, never dignity.
++claim.sova_closing_lesson(npc.sova, lesson_theme, ground_costs_time_not_dignity)
+
+-> END

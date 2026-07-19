@@ -89,3 +89,6 @@ jobs:
 
       - name: content package schema validation (tech_guidelines.md D7/§5.1)
         run: python3 tools/content_validator.py
+
+      - name: dialogue DSL compile check (foundation_blueprints.md §4.1)
+        run: python3 tools/dlgc.py
