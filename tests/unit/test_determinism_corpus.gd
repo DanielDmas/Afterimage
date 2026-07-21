@@ -1,14 +1,22 @@
 extends AfterimageTestCase
 
 ## Exercises the determinism-corpus mechanism (tech_guidelines.md §3, §9)
-## against fixtures in tests/corpus/, using StubSim (tests/fixtures/) as an
-## explicitly disposable placeholder for TruthSim (Pass 3+). What this
-## proves right now is narrower than the full roadmap.md M0 acceptance
-## criterion ("re-simulates hash-identical on Linux/Win/mac in CI"): it
-## proves the recording -> replay -> hash -> compare pipeline correctly
-## detects both agreement and divergence, in-process. Cross-platform
-## byte-for-byte agreement needs multi-OS CI runners, tracked separately
-## in roadmap.md (still open there as of Pass 2).
+## against fixtures in tests/corpus/, using TruthSimDigest (tests/fixtures/)
+## to re-simulate each one through a real TruthSim in a real graybox room —
+## not Pass 2's disposable StubSim stand-in, replaced post-arc
+## (docs/review_and_forward_plan.md F9) once there was real collision/
+## Ground behavior worth a determinism guard. The three corpus fixtures
+## (v1, this pass) exercise real wall collision (run_002 walks straight
+## into the east wall and keeps pressing past it — the clamp must hold
+## identically every re-simulation) and a full Ground-hold-to-completion
+## cycle (run_003), not just raw position summation.
+##
+## What this proves right now is narrower than the full roadmap.md M0
+## acceptance criterion ("re-simulates hash-identical on Linux/Win/mac in
+## CI"): it proves the recording -> replay -> hash -> compare pipeline
+## correctly detects both agreement and divergence, in-process.
+## Cross-platform byte-for-byte agreement needs multi-OS CI runners,
+## tracked separately in roadmap.md (still open there as of Pass 2).
 
 const CORPUS_DIR: String = "res://tests/corpus/"
 const FIXTURE_NAMES: Array[String] = ["run_001.json", "run_002.json", "run_003.json"]
@@ -28,17 +36,17 @@ func _load_fixture(file_name: String) -> ReplayLog:
 
 
 func test_all_three_fixtures_load_with_expected_frame_counts() -> void:
-	assert_eq(_load_fixture("run_001.json").frame_count(), 5)
-	assert_eq(_load_fixture("run_002.json").frame_count(), 8)
-	assert_eq(_load_fixture("run_003.json").frame_count(), 12)
+	assert_eq(_load_fixture("run_001.json").frame_count(), 50)
+	assert_eq(_load_fixture("run_002.json").frame_count(), 80)
+	assert_eq(_load_fixture("run_003.json").frame_count(), 120)
 
 
 func test_replaying_a_fixture_twice_produces_identical_digests() -> void:
 	for file_name: String in FIXTURE_NAMES:
 		var first_run: ReplayLog = _load_fixture(file_name)
 		var second_run: ReplayLog = _load_fixture(file_name)
-		var digest_a: String = StubSim.run_and_digest(first_run)
-		var digest_b: String = StubSim.run_and_digest(second_run)
+		var digest_a: String = TruthSimDigest.run_and_digest(first_run)
+		var digest_b: String = TruthSimDigest.run_and_digest(second_run)
 		assert_eq(digest_a, digest_b, "%s must re-simulate hash-identical" % file_name)
 
 
@@ -48,7 +56,7 @@ func test_distinct_fixtures_produce_distinct_digests() -> void:
 	# frame count, or ignores run_seed).
 	var digests: Array[String] = []
 	for file_name: String in FIXTURE_NAMES:
-		digests.append(StubSim.run_and_digest(_load_fixture(file_name)))
+		digests.append(TruthSimDigest.run_and_digest(_load_fixture(file_name)))
 	assert_eq(digests.size(), 3)
 	assert_ne(digests[0], digests[1])
 	assert_ne(digests[1], digests[2])
@@ -60,7 +68,7 @@ func test_digest_is_sensitive_to_run_seed() -> void:
 	a.record(InputFrame.new(1, {"move_x": 1}))
 	var b := ReplayLog.new(2, "fixture")
 	b.record(InputFrame.new(1, {"move_x": 1}))
-	assert_ne(StubSim.run_and_digest(a), StubSim.run_and_digest(b))
+	assert_ne(TruthSimDigest.run_and_digest(a), TruthSimDigest.run_and_digest(b))
 
 
 func test_digest_is_sensitive_to_an_extra_frame() -> void:
@@ -76,12 +84,12 @@ func test_digest_is_sensitive_to_an_extra_frame() -> void:
 	longer.record(InputFrame.new(2, {"move_x": 1}))
 	longer.record(InputFrame.new(3, {"move_x": 1}))
 
-	assert_ne(StubSim.run_and_digest(shorter), StubSim.run_and_digest(longer))
+	assert_ne(TruthSimDigest.run_and_digest(shorter), TruthSimDigest.run_and_digest(longer))
 
 
 func test_digest_is_a_sha256_hex_string() -> void:
 	var replay := ReplayLog.new(1, "fixture")
-	var digest: String = StubSim.run_and_digest(replay)
+	var digest: String = TruthSimDigest.run_and_digest(replay)
 	assert_eq(digest.length(), 64, "SHA-256 hex digest must be 64 characters")
 	for c: String in digest:
 		assert_true(c in "0123456789abcdef", "digest must be lowercase hex, got char '%s'" % c)

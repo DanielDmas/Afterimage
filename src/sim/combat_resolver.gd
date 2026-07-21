@@ -12,8 +12,10 @@
 ## real level exists until Pass 7's graybox room. This gives every noise
 ## source a working, testable open-air hearing check now; swapping it for
 ## room-aware propagation later is an additive change, not a rewrite — the
-## same kind of deferral Pass 3's dev_log entry documents for the
-## determinism corpus staying on StubSim.
+## same kind of deliberate deferral Pass 3's dev_log entry documents for
+## the determinism corpus (which stayed on a disposable stand-in until
+## Pass 7's graybox room gave TruthSim a real divergence surface worth
+## guarding — done post-arc, docs/review_and_forward_plan.md F9).
 class_name CombatResolver
 extends RefCounted
 

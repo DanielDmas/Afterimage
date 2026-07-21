@@ -1,12 +1,357 @@
 {
-	"replay_version": 1,
-	"run_seed": 1001,
-	"content_version": "corpus-v0-fixture-1",
-	"frames": [
-		{"tick": 1, "inputs": {"move_x": 1, "move_y": 0}},
-		{"tick": 2, "inputs": {"move_x": 1, "move_y": 0}},
-		{"tick": 3, "inputs": {"move_x": 0, "move_y": 1}},
-		{"tick": 4, "inputs": {"move_x": 0, "move_y": 1, "roll": true}},
-		{"tick": 5, "inputs": {"move_x": -1, "move_y": 0}}
-	]
+ "replay_version": 1,
+ "run_seed": 2001,
+ "content_version": "corpus-v1-graybox-fixture-1",
+ "frames": [
+  {
+   "tick": 1,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 2,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 3,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 4,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 5,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 6,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 7,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 8,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 9,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 10,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 11,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 12,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 13,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 14,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 15,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 16,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 17,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 18,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 19,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 20,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 21,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 22,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 23,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 24,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 25,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 26,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 27,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 28,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 29,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 30,
+   "inputs": {
+    "move_x": 47,
+    "move_y": 0
+   }
+  },
+  {
+   "tick": 31,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 32,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 33,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 34,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 35,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 36,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 37,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 38,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 39,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 40,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 41,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 42,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 43,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 44,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 45,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 46,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 47,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 48,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 49,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  },
+  {
+   "tick": 50,
+   "inputs": {
+    "move_x": 0,
+    "move_y": -47
+   }
+  }
+ ]
 }
