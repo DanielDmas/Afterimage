@@ -17,12 +17,20 @@ fails CI"):
   - Cross-file ID resolution (tech_guidelines §5.2) — there is exactly one
     ID field in the v1 schema (a mission's own id) and nothing yet
     references another mission's ID, so there is nothing to resolve.
-  - Fairness Charter validation (FairnessAuditor, Pass 12) — that class
-    lives in GDScript and validates live op-shaped objects; running it
-    against raw deck JSON is a content-pipeline integration step for a
-    later pass once dramatic_intent/fairness_tags are added to the deck
-    schema (a versioned schema migration, per D7 - not silently bolted on
-    here).
+
+Fairness Charter validation (FairnessAuditor, Pass 12) against real mission
+content — once anticipated here as a future addition to *this* schema
+(dramatic_intent/fairness_tags as deck-level fields) — instead landed as
+GDScript, post-arc (docs/review_and_forward_plan.md's F1): `fairness_tags`
+stays entirely non-authorable, hardcoded inside each concrete op's own
+`_init()` (a structurally stronger guarantee than a schema field content
+could override would ever be), and `dramatic_intent` is just one more key
+inside the new optional `params` object below. `OpFactory.build()` turns a
+schema-valid deck entry into a real op; `tests/unit/test_mission_content_fairness.gd`
+runs every real `content/missions/*/mission.json` through it and
+`FairnessAuditor.validate()` in CI, as part of the existing test suite —
+the actual, stronger version of "runs on every content commit" this
+docstring used to describe as a schema-migration away.
 """
 
 import json

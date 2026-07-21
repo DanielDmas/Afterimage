@@ -8,6 +8,20 @@ func test_metadata_matches_master_plan_table() -> void:
 	assert_eq(op.cost, 8)
 
 
+## Regression: PhantomAudio is one of FairnessAuditor.PHANTOM_OP_CLASSES,
+## which requires the rule-1 tag ("phantoms never deal damage/block") —
+## this class's own fairness_tags never actually declared it (a real gap
+## the original FairnessAuditor test suite never caught, since it only
+## ever exercised hand-built fixtures with deliberately complete tags,
+## never PhantomAudio's own real, actual ones — caught post-arc by
+## tests/unit/test_mission_content_fairness.gd running real content
+## through the real classes, docs/review_and_forward_plan.md F1).
+func test_declares_rule_1_and_rule_3_fairness_tags() -> void:
+	var op := PhantomAudio.new(Vector2i(0, 0), "footsteps")
+	assert_true(op.fairness_tags.has("charter_rule_1_never_damages_never_blocks"))
+	assert_true(op.fairness_tags.has("charter_rule_3_inputs_never_distorted"))
+
+
 func test_apply_adds_a_phantom_event_even_with_no_real_sound_events() -> void:
 	var op := PhantomAudio.new(Vector2i(1000, 2000), "footsteps")
 	var percept: Dictionary = op.apply({"tick": 1, "actors": []})

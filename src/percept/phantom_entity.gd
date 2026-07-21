@@ -43,7 +43,9 @@ func _init(
 	cost = COST
 	dramatic_intent = p_dramatic_intent
 	fairness_tags = [
-		"charter_rule_1_never_damages_never_blocks", "charter_rule_5_always_disclosable"
+		"charter_rule_1_never_damages_never_blocks",
+		"charter_rule_3_inputs_never_distorted",
+		"charter_rule_5_always_disclosable",
 	]
 	phantom_position = p_phantom_position
 	phantom_facing_dir = p_phantom_facing_dir

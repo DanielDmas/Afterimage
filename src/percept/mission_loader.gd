@@ -52,12 +52,24 @@ static func from_dict(data: Dictionary) -> MissionPackage:
 		var variable_affinity: Array[String] = []
 		for variable_name: String in raw_entry["variable_affinity"] as Array:
 			variable_affinity.append(variable_name)
-		deck.append(
-			DeckEntry.new(
-				raw_entry["op_class"],
-				int(raw_entry["tier"]),
-				int(raw_entry["cost"]),
-				variable_affinity
+		(
+			deck
+			. append(
+				(
+					DeckEntry
+					. new(
+						raw_entry["op_class"],
+						int(raw_entry["tier"]),
+						int(raw_entry["cost"]),
+						variable_affinity,
+						# passed through untyped and unvalidated - OpFactory.build() is
+						# the one place that knows what shape a given op_class's
+						# params actually need, and asserts clearly if they don't
+						# match; MissionLoader stays as op-class-agnostic as DeckEntry
+						# itself always has been.
+						raw_entry.get("params", {})
+					)
+				)
 			)
 		)
 

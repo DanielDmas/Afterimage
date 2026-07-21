@@ -13,25 +13,45 @@
       "op_class": "AudioSwap",
       "tier": 1,
       "cost": 8,
-      "variable_affinity": ["acute_stress"]
+      "variable_affinity": ["acute_stress"],
+      "params": {
+        "target_source_id": 1,
+        "swapped_tag": "muffled_thud",
+        "dramatic_intent": "doubt"
+      }
     },
     {
       "op_class": "PhantomAudio",
       "tier": 1,
       "cost": 8,
-      "variable_affinity": ["moral_injury"]
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "phantom_position": { "x": 2000, "y": 500 },
+        "phantom_tag": "footsteps_behind_you",
+        "dramatic_intent": "dread"
+      }
     },
     {
       "op_class": "SubtitleDrift",
       "tier": 1,
       "cost": 5,
-      "variable_affinity": ["fatigue"]
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "drifted_text": "Multiple hostiles, fall back!",
+        "dramatic_intent": "paranoia"
+      }
     },
     {
       "op_class": "PhantomEntity",
       "tier": 3,
       "cost": 25,
-      "variable_affinity": ["moral_injury", "identity_strain"]
+      "variable_affinity": ["moral_injury", "identity_strain"],
+      "params": {
+        "phantom_position": { "x": 4000, "y": 1500 },
+        "entity_kind": "armed_figure",
+        "phantom_facing_dir": { "x": -1, "y": 0 },
+        "dramatic_intent": "paranoia"
+      }
     }
   ]
 }

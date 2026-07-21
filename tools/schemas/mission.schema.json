@@ -67,6 +67,10 @@
               "type": "string",
               "enum": ["acute_stress", "fatigue", "moral_injury", "identity_strain"]
             }
+          },
+          "params": {
+            "type": "object",
+            "description": "Post-arc addition (docs/review_and_forward_plan.md F1): the op-class-specific construction data OpFactory.build() (GDScript) needs to turn this entry into a real DistortionOp - e.g. SubtitleDrift needs 'drifted_text', PhantomEntity needs 'phantom_position'/'entity_kind'. Deliberately left as a loose object here rather than a discriminated union keyed on op_class: this hand-rolled validator has no conditional-schema support (see this file's own module docstring), and OpFactory.build() is a stronger check anyway - it asserts clearly on a missing/malformed field for the specific op_class in question, exercised in CI by tests/unit/test_mission_content_fairness.gd against every real mission.json, not just schema-shape-checked here."
           }
         }
       }

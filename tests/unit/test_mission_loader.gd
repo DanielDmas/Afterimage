@@ -33,6 +33,16 @@ func test_load_from_file_deck_entries_match_the_json() -> void:
 	assert_eq(tier_3_entry.variable_affinity, ["moral_injury", "identity_strain"])
 
 
+## Post-arc: params (docs/review_and_forward_plan.md F1) pass through
+## untouched — MissionLoader doesn't validate or reshape them, only
+## OpFactory does.
+func test_load_from_file_params_pass_through_untouched() -> void:
+	var package: MissionPackage = MissionLoader.load_from_file(STUB_MISSION_PATH)
+	var first: DeckEntry = package.deck[0]
+	assert_eq(first.params["target_source_id"], 1.0)  # JSON numbers parse as float
+	assert_eq(first.params["swapped_tag"], "muffled_thud")
+
+
 func test_from_dict_matches_load_from_file() -> void:
 	var file: FileAccess = FileAccess.open(STUB_MISSION_PATH, FileAccess.READ)
 	assert_not_null(file, "stub fixture must exist: %s" % STUB_MISSION_PATH)

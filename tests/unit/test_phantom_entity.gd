@@ -9,6 +9,16 @@ func test_metadata_matches_master_plan_table() -> void:
 	assert_true(op.fairness_tags.has("charter_rule_1_never_damages_never_blocks"))
 
 
+## Regression: rule 3 ("inputs never distorted") applies to every op class
+## unconditionally (FairnessAuditor._validate_entry()'s own unconditional
+## check), but this class's fairness_tags never actually declared it —
+## the same real gap PhantomAudio had, caught the same way post-arc
+## (docs/review_and_forward_plan.md F1, tests/unit/test_mission_content_fairness.gd).
+func test_declares_rule_3_fairness_tag() -> void:
+	var op := PhantomEntity.new(Vector2i(0, 0), "dog")
+	assert_true(op.fairness_tags.has("charter_rule_3_inputs_never_distorted"))
+
+
 func test_apply_adds_a_phantom_actor_with_a_negative_id() -> void:
 	var op := PhantomEntity.new(Vector2i(3000, 4000), "person", Vector2i(0, -1))
 	var percept: Dictionary = op.apply({"tick": 1, "actors": []})
