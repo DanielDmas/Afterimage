@@ -740,3 +740,7 @@ Not built this pass, deliberately, with reasons recorded in `docs/forward_dev_pl
 **Files added:** `src/integration/mission_runtime.gd`, `src/integration/mind_model_event_bridge.gd`, `tests/unit/test_mission_runtime.gd`, `tests/unit/test_mind_model_event_bridge.gd`.
 
 **Files changed:** `src/percept/distortion_director.gd` (+`deck_index` in purchase records), `tests/unit/test_distortion_director.gd` (+2 tests), `docs/forward_dev_plan.md` (Phase B marked "PARTIALLY DELIVERED" with the honest remaining scope spelled out).
+
+**First push (commit `2b84f92`) failed CI** — a real test-arithmetic mistake, not a bridge bug: `test_ground_completed_relieves_acute_stress` fired one `WeaponFired` (+2) then `GroundCompleted` (-8) and asserted the sum, -6, forgetting `AcuteStressState._add_fx()` clamps at a floor of 0 (it's a 0-100 scale, never negative) — the real result was 0, and the test was asserting a value the state class can't ever hold. 620/621 passed; fixed by firing five `WeaponFired` events first (+10) so the post-relief value (+2) stays positive and actually proves the relief fired, rather than being indistinguishable from "nothing happened." Fixed in commit `8310212`, confirmed green on the next push.
+
+**Confirmed green (commit `8310212`):** CI run [29953564976](https://github.com/DanielDmas/Afterimage/actions/runs/29953564976) — both jobs `success`. Test log shows the literal `ALL PASSED (621/621)` with zero `[FAIL]` lines. `gdlint`/`gdformat --check`/`percept_truth_boundary_lint.py`/`content_validator.py`/`dlgc.py` all green too.
