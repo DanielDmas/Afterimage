@@ -6,6 +6,17 @@ extends AfterimageTestCase
 ## designed pipeline (Ground observed -> suspicion -> gossip) running
 ## end to end for the first time, not three separately-tested segments
 ## that never once ran together.
+##
+## Every test below keeps its GroundObservationBridge in a local `bridge`
+## variable, even where nothing reads it afterward — a real CI failure
+## here (this file's own first version) proved why that matters: a
+## RefCounted with no other owner can be freed even while an EventBus
+## still holds a Callable bound to one of its methods, silently
+## invalidating the subscription (EventBus._dispatch_one() checks
+## handler.is_valid() before calling it — a freed handler is skipped, not
+## an error, so the failure was a value of 0 where 2 was expected, not a
+## script error). See GroundObservationBridge's own class doc for the
+## same warning aimed at real callers, not just this test file.
 
 
 func _make_seeing_scenario() -> Dictionary:
@@ -53,39 +64,18 @@ func test_ground_observed_propagates_one_gossip_hop_to_a_confidant() -> void:
 	graph.add_npc(NPC.new("npc.observer", {}, [], [], [], [], edges))
 	graph.add_npc(NPC.new("npc.confidant"))
 	var gossip := GossipSim.new(1)
-	# Kept alive in a local var deliberately - GroundObservationBridge is a
-	# RefCounted with no other owner; discarding the constructor's return
-	# value here is suspected (pending CI confirmation) to let it be freed
-	# before Ground ever completes, silently invalidating its EventBus
-	# subscription (EventBus._dispatch_one() checks handler.is_valid()
-	# before calling it - a freed handler is skipped, not an error).
+	# Kept alive in a local var, same as every other bridge in this file -
+	# see this file's own class doc for why a discarded return value here
+	# is a real, silent failure mode, not just style.
 	var bridge := GroundObservationBridge.new(graph, gossip, {ai_id: "npc.observer"}, event_bus, 10)
-
-	# Diagnostics (temporary, pending a real CI failure this pass hasn't
-	# yet root-caused): confirm the edges actually stored, and that the
-	# direct observer-side entry lands in this exact test's setup, before
-	# asking anything about the confidant's propagated one.
-	assert_eq(graph.npc("npc.observer").gossip_edges.size(), 1, "edges not stored on NPC")
-	assert_eq(
-		graph.npc("npc.observer").gossip_edges[0]["npc_id"],
-		"npc.confidant",
-		"wrong edge target stored"
-	)
+	assert_eq(graph.npc("npc.observer").gossip_edges.size(), 1)
 
 	_hold_ground_to_completion(sim)
 
-	assert_eq(
-		graph.total_for("npc.observer", 10),
-		SuspicionLedger.WEIGHT_SEEN_GROUNDING,
-		"direct observer entry never landed"
-	)
+	assert_eq(graph.total_for("npc.observer", 10), SuspicionLedger.WEIGHT_SEEN_GROUNDING)
 	# Arrives 2 days after day 10 - absent before then, present at/after.
-	assert_eq(graph.total_for("npc.confidant", 11), 0, "confidant entry arrived too early")
-	assert_eq(
-		graph.total_for("npc.confidant", 12),
-		SuspicionLedger.WEIGHT_SEEN_GROUNDING,
-		"confidant entry never arrived"
-	)
+	assert_eq(graph.total_for("npc.confidant", 11), 0)
+	assert_eq(graph.total_for("npc.confidant", 12), SuspicionLedger.WEIGHT_SEEN_GROUNDING)
 
 
 func test_an_unmapped_observer_is_silently_skipped() -> void:

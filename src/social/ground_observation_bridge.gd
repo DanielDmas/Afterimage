@@ -24,6 +24,21 @@
 ## question at all — it's a social-layer consumer of a truth-layer fact,
 ## exactly the kind of cross-directory reference this codebase has always
 ## allowed everywhere except the one percept/truth seam.
+##
+## **The caller must keep a reference to the constructed bridge for as
+## long as its subscription should stay active.** This class is a plain
+## `RefCounted` with no other owner; `_init()`'s `event_bus.subscribe()`
+## call stores a `Callable` bound to this instance, but that alone does
+## not keep the instance alive against Godot's reference counting once
+## the constructor call's own temporary reference goes out of scope — a
+## real CI failure (`tests/unit/test_ground_observation_bridge.gd`'s own
+## first version, which discarded `GroundObservationBridge.new()`'s
+## return value in three of its four tests) proved this the hard way: the
+## bridge got freed before Ground ever completed, and `EventBus.
+## _dispatch_one()`'s own `handler.is_valid()` check silently skipped the
+## now-dead subscription — no error, just a suspicion entry that quietly
+## never landed. Assign the constructor's result to a variable that
+## outlives the scene/session this bridge should watch.
 class_name GroundObservationBridge
 extends RefCounted
 
