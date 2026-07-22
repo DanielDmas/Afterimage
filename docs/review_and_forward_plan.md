@@ -97,7 +97,15 @@ Ordered roughly by leverage-per-effort:
 
 ---
 
-## 4. Forward plan (proposed order, no code yet)
+## 4. Forward plan (proposed order) — **P1–P4 + F5 DELIVERED; superseded by `docs/forward_dev_plan.md`**
+
+**Status:** this original five-phase plan has largely been executed. **P1** (F2, F6, F4, icon + F7's branch-filter half), **P2** (F3), **P3** (the thesis demo: Ground verb bound, one scripted drift, dual-view reveal — `DriftEncounter` + the reveal panel), **P4** (F1 OpFactory + auditor-on-content CI, F9 corpus re-point onto real `TruthSim`), and **P5's F5** (the suspicion pipeline, via `GroundObservationBridge`) are all done and CI-green. What remains open from P4/P5: **F8** (dialogue runtime), **F10** (`HubDayLoop`), **F11** (touch/gamepad/crouch/diagonal), **F12** (settings persistence). F7's Pages toggle is the owner's one-click action.
+
+The forward plan continues, at greater depth and grounded in the now-wired state, in **[`docs/forward_dev_plan.md`](forward_dev_plan.md)** — organized around the next north star: turning the tech demo into a **playable end-to-end mission loop in the browser** (play → distort under a *director-driven* deck → ground → debrief with As-Seen/Verified-Only/Fabricate → Afterimage reveal). That plan's critical path is Phase A (complete the 11-op taxonomy) → B (wire the real distortion pipeline into the playable scene) → C (the debrief loop), with D–G (AI patrol, dialogue runtime, camera/evidence, persistence/platform) around it.
+
+The original P1–P5 text is preserved below for the record.
+
+<details><summary>Original P1–P5 (kept for record)</summary>
 
 **P1 — Trust repairs (small, do first):**
 F2 (lint scenes/ in CI) · F7 (workflow branch trigger) · F6 (pass EventBus) · F4 (record ReplayLog) · icon (F13). Each is minutes, each closes a silent-drift hole.
@@ -111,7 +119,8 @@ F2 (lint scenes/ in CI) · F7 (workflow branch trigger) · F6 (pass EventBus) ·
 **P5 — Loops close:** F5 (suspicion pipeline integration test) · F10 (HubDayLoop) · F12 (settings persistence + palette adoption) · F11 (input completeness, touch) · localization discipline start (`tr()`).
 
 Everything beyond P5 is the roadmap's existing M5–M7 territory (real art/audio/content/playtesting) and stays there.
+</details>
 
 ---
 
-*Cross-references: `docs/dev_log.md` (this review is logged as a post-arc entry), `docs/roadmap.md` (M-item statuses unchanged by this review — findings here are seams between checked items, which is exactly why a fresh-eyes pass was worth it).*
+*Cross-references: `docs/forward_dev_plan.md` (the living forward plan, v2), `docs/dev_log.md` (this review + all post-arc work logged), `docs/roadmap.md` (M-item statuses).*

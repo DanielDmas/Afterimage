@@ -27,8 +27,10 @@ godot --headless --path . --script res://tests/run_tests.gd
 | [`docs/story_bible.md`](docs/story_bible.md) | **Spoiler-complete** narrative canon: fixed timeline (1993–2004), character voice sheets, gazetteer, ground-truth outlines for prologue + slice missions |
 | [`docs/roadmap.md`](docs/roadmap.md) | The development backlog: milestone work items with acceptance criteria, and the definition-of-ready-to-code checklist |
 | [`docs/dev_log.md`](docs/dev_log.md) | Pass-by-pass engineering log: what was built, how it was verified, what's deferred |
+| [`docs/review_and_forward_plan.md`](docs/review_and_forward_plan.md) | Post-arc code review: the F1–F13 blank-spot findings (most now closed) between individually-green systems |
+| [`docs/forward_dev_plan.md`](docs/forward_dev_plan.md) | **The living forward plan (v2):** the north-star playable-loop goal and the in-sandbox-buildable phases (A–G) toward it, with an explicit blocked-list |
 
-Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed. (`story_bible.md` spoils the entire game — read deliberately.)
+Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed. For "what's next," read `forward_dev_plan.md`. (`story_bible.md` spoils the entire game — read deliberately.)
 
 ## Ground rules (from the plans, binding)
 1. **Determinism is law** — the truth simulation replays tick-perfect, always (it's the save format, the bug report, and the Afterimage Theater).
