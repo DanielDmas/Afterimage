@@ -53,7 +53,13 @@ func test_ground_observed_propagates_one_gossip_hop_to_a_confidant() -> void:
 	graph.add_npc(NPC.new("npc.observer", {}, [], [], [], [], edges))
 	graph.add_npc(NPC.new("npc.confidant"))
 	var gossip := GossipSim.new(1)
-	GroundObservationBridge.new(graph, gossip, {ai_id: "npc.observer"}, event_bus, 10)
+	# Kept alive in a local var deliberately - GroundObservationBridge is a
+	# RefCounted with no other owner; discarding the constructor's return
+	# value here is suspected (pending CI confirmation) to let it be freed
+	# before Ground ever completes, silently invalidating its EventBus
+	# subscription (EventBus._dispatch_one() checks handler.is_valid()
+	# before calling it - a freed handler is skipped, not an error).
+	var bridge := GroundObservationBridge.new(graph, gossip, {ai_id: "npc.observer"}, event_bus, 10)
 
 	# Diagnostics (temporary, pending a real CI failure this pass hasn't
 	# yet root-caused): confirm the edges actually stored, and that the
@@ -90,7 +96,7 @@ func test_an_unmapped_observer_is_silently_skipped() -> void:
 
 	var graph := SuspicionGraph.new()
 	var gossip := GossipSim.new(1)
-	GroundObservationBridge.new(graph, gossip, {}, event_bus, 0)
+	var bridge := GroundObservationBridge.new(graph, gossip, {}, event_bus, 0)
 
 	_hold_ground_to_completion(sim)
 	# Nothing to assert against (no NPC even exists) - the point is this
@@ -105,7 +111,7 @@ func test_ground_never_observed_leaves_the_graph_untouched() -> void:
 	var graph := SuspicionGraph.new()
 	graph.add_npc(NPC.new("npc.observer"))
 	var gossip := GossipSim.new(1)
-	GroundObservationBridge.new(graph, gossip, {}, event_bus, 0)
+	var bridge := GroundObservationBridge.new(graph, gossip, {}, event_bus, 0)
 
 	_hold_ground_to_completion(sim)
 
