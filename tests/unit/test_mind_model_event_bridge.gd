@@ -26,17 +26,26 @@ func test_actor_downed_raises_acute_stress_by_the_witnessing_kill_amount() -> vo
 	assert_not_null(bridge)
 
 
+## AcuteStressState clamps at a floor of 0 (it's a 0-100 scale, never
+## negative) — a single WeaponFired's +2 followed by GroundCompleted's -8
+## would clamp to 0 regardless of whether the relief actually fired,
+## proving nothing. Five WeaponFired events first (+10 total) keeps the
+## post-relief value positive and unambiguous.
 func test_ground_completed_relieves_acute_stress() -> void:
 	var mind := MindModel.new()
 	var event_bus := EventBus.new()
 	var bridge := MindModelEventBridge.new(mind, event_bus)
 
-	event_bus.publish("WeaponFired", {"shooter_id": 1, "hit_id": -1})
+	for i: int in range(5):
+		event_bus.publish("WeaponFired", {"shooter_id": 1, "hit_id": -1})
 	event_bus.publish("GroundCompleted", {"observed_by": -1})
 	assert_eq(
 		mind.acute_stress.value_fx(),
 		FixedMath.from_int(
-			AcuteStressState.GAIN_GUNFIRE_IN_EARSHOT + AcuteStressState.RELIEF_GROUND_COMPLETED
+			(
+				(5 * AcuteStressState.GAIN_GUNFIRE_IN_EARSHOT)
+				+ AcuteStressState.RELIEF_GROUND_COMPLETED
+			)
 		),
 	)
 	assert_not_null(bridge)
