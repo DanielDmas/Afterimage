@@ -638,3 +638,21 @@ No new test count change — this closes a real gap in what the *existing* corpu
 **Files changed:** `tests/fixtures/stub_sim.gd` (deleted), `tests/corpus/{run_001,run_002,run_003}.json` (rewritten), `tests/unit/test_determinism_corpus.gd` (points at `TruthSimDigest`, updated frame-count assertions and class doc), `src/sim/combat_resolver.gd` (stale comment corrected), `docs/roadmap.md` (M0/M1 scope notes updated), `docs/review_and_forward_plan.md` (F9 marked closed).
 
 **Confirmed green (commit `9b34792`):** CI run [29823977637](https://github.com/DanielDmas/Afterimage/actions/runs/29823977637) — both jobs `success`. Test log shows the literal `ALL PASSED (550/550)` with zero `[FAIL]` lines; confirmed all six `test_determinism_corpus.gd` cases ran and passed by name against the real `TruthSim`-backed digest, including `test_all_three_fixtures_load_with_expected_frame_counts` (the rewritten 50/80/120-frame fixtures) and `test_replaying_a_fixture_twice_produces_identical_digests` (proving real wall-collision clamping and a full Ground-hold cycle re-simulate byte-identical). `gdlint`/`gdformat --check`/`percept_truth_boundary_lint.py`/`content_validator.py`/`dlgc.py` all green too.
+
+---
+
+## Post-arc: the suspicion pipeline runs end to end (F5 closed)
+
+The designed pipeline — Ground observed → a suspicion entry → gossip propagation → (eventually) an org board — existed as three separately-tested segments (`TruthSim._resolve_ground_completion()` publishes `"GroundObserved"`; `SuspicionLedger`/`SuspicionGraph` track weighted entries; `GossipSim.propagate()` fans one out along gossip edges) that had never once run together, even in a test. Each individual "no consumer yet" deferral was reasonable at the time it was made; collectively they left a real, designed mechanic entirely disconnected.
+
+**`src/social/ground_observation_bridge.gd`** (`GroundObservationBridge`) is the missing wiring — subscribes to `"GroundObserved"` on a real `EventBus`, and on receipt adds a `SuspicionLedger` entry and propagates it one `GossipSim` hop. The one real design gap the review's own suggested next step didn't call out: `TruthSim` identifies actors by sequential int ID (`ActorRegistry`); `SuspicionGraph` identifies NPCs by authored String id; nothing anywhere maps between the two namespaces. Rather than invent a convention neither system already commits to, the bridge takes that mapping as a constructor argument — a scene wires up which AI actor socially *is* which NPC, and an unmapped observer (a faceless patrol guard with no social identity) is silently skipped, not an error.
+
+**`tests/unit/test_ground_observation_bridge.gd`** (4 tests) proves the full chain against real systems, not fixtures standing in for each other: a real `TruthSim`, a real `Sentry`-archetype AI actor positioned and facing so it genuinely sees the player (`VisionCone`/`LineOfSight`, not a mocked "can_see" flag), a full 75-tick Ground hold to completion, a real `SuspicionLedger` entry landing at the correct weight, and a real `GossipSim` propagation arriving at a confidant NPC on the correct future day (absent the day before, present the day of arrival — the ledger's own day-gating exercised for real, not asserted in isolation). A separate test confirms an AI with no NPC mapping is silently skipped rather than erroring, and another confirms Ground resolving with no observer at all leaves the graph untouched.
+
+The org board itself (rendering this state) is real UI/content work, tracked separately in roadmap.md — this closes the *mechanism* gap, not the presentation layer.
+
+**4 new tests**, bringing the suite to **554 tests**. Clean against `gdlint`/`gdformat --check`/`tools/percept_truth_boundary_lint.py`/`tools/content_validator.py`/`tools/dlgc.py` locally before commit.
+
+**Files added:** `src/social/ground_observation_bridge.gd`, `tests/unit/test_ground_observation_bridge.gd`.
+
+**Files changed:** `docs/review_and_forward_plan.md` (F5 marked closed).
