@@ -8,7 +8,7 @@ func test_load_from_file_loads_the_real_stub_fixture() -> void:
 	assert_eq(package.id, "mission.m00_stub")
 	assert_eq(package.scene_type, DistortionDirector.SceneType.COMBAT)
 	assert_eq(package.encounter_cap, 3)
-	assert_eq(package.deck.size(), 4)
+	assert_eq(package.deck.size(), 11)
 
 
 func test_load_from_file_converts_mission_weights_to_fixed_point() -> void:
