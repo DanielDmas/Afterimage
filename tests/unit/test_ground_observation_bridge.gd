@@ -46,18 +46,11 @@ func test_ground_observed_propagates_one_gossip_hop_to_a_confidant() -> void:
 	var event_bus: EventBus = scenario["event_bus"]
 	var ai_id: int = scenario["ai_id"]
 
+	var edges: Array[Dictionary] = [
+		{"npc_id": "npc.confidant", "delay_days": 2, "distortion": false}
+	]
 	var graph := SuspicionGraph.new()
-	graph.add_npc(
-		NPC.new(
-			"npc.observer",
-			{},
-			[],
-			[],
-			[],
-			[],
-			[{"npc_id": "npc.confidant", "delay_days": 2, "distortion": false}]
-		)
-	)
+	graph.add_npc(NPC.new("npc.observer", {}, [], [], [], [], edges))
 	graph.add_npc(NPC.new("npc.confidant"))
 	var gossip := GossipSim.new(1)
 	GroundObservationBridge.new(graph, gossip, {ai_id: "npc.observer"}, event_bus, 10)
