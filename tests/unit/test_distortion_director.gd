@@ -152,6 +152,21 @@ func test_purchase_one_respects_the_global_density_cap() -> void:
 	assert_true(blocked.is_empty())
 
 
+## deck_index (post-arc addition) is what lets a caller turn a purchase
+## record back into a real op instance (OpFactory.build(deck[deck_index]))
+## without matching op_class/tier/cost by value, which would be ambiguous
+## the moment a deck ever authors two same-shaped entries with different
+## params — see MissionRuntime, the first real caller.
+func test_purchase_one_records_the_purchased_deck_index() -> void:
+	var deck: Array[DeckEntry] = [
+		DeckEntry.new("SubtitleDrift", 1, 5, []), DeckEntry.new("AudioSwap", 1, 5, [])
+	]
+	var director := DistortionDirector.new(1)
+	director.budget = 1000
+	var record: Dictionary = director.purchase_one(deck, {}, 0)
+	assert_eq(deck[record["deck_index"]].op_class, record["op_class"])
+
+
 func test_purchase_one_skips_unaffordable_entries() -> void:
 	var deck: Array[DeckEntry] = [DeckEntry.new("TimeGap", 4, 30, [])]
 	var director := DistortionDirector.new(1)
@@ -264,6 +279,7 @@ func test_authorize_free_tier_picks_uniformly_among_the_requested_tier() -> void
 	assert_true(record["authorized"])
 	assert_eq(director.budget, 0)
 	assert_eq(director.active_op_count(), 1)
+	assert_eq(deck[record["deck_index"]].op_class, "SubtitleDrift")
 
 
 func test_authorize_free_tier_respects_the_global_density_cap() -> void:

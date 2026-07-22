@@ -169,12 +169,18 @@ func _affinity_weight_fx(entry: DeckEntry, mind_values_fx: Dictionary) -> int:
 
 ## Attempts one purchase from `deck` against the current budget, respecting
 ## the global density cap, tier-3+ spacing, and Ground-resolution weight
-## decay. Returns the purchase record ({tick, op_class, tier, cost}) on
-## success, or an empty Dictionary if nothing was eligible (cap reached, or
-## every entry unaffordable/too-soon-after-a-tier-3+ purchase). Charter
-## legality itself (§4.3: "an illegal purchase is a build failure, not a
-## runtime clamp") is FairnessAuditor's job on the deck before it ever
-## reaches here, not re-checked per purchase.
+## decay. Returns the purchase record ({tick, op_class, tier, cost,
+## deck_index}) on success, or an empty Dictionary if nothing was eligible
+## (cap reached, or every entry unaffordable/too-soon-after-a-tier-3+
+## purchase). `deck_index` (post-arc addition) is the one piece of
+## information a caller needs to turn this plain-data record back into a
+## real op instance via `OpFactory.build(deck[deck_index])` — matching by
+## op_class/tier/cost value alone would be ambiguous the moment a deck ever
+## authors two entries with the same class/tier/cost and different params
+## (e.g. two SubtitleDrift tier-1 entries with different drifted_text).
+## Charter legality itself (§4.3: "an illegal purchase is a build failure,
+## not a runtime clamp") is FairnessAuditor's job on the deck before it
+## ever reaches here, not re-checked per purchase.
 func purchase_one(
 	deck: Array[DeckEntry], mind_values_fx: Dictionary, current_tick: int
 ) -> Dictionary:
@@ -216,7 +222,11 @@ func purchase_one(
 	if chosen.tier >= TIER_SPACING_MIN_TIER:
 		_last_tier_spacing_purchase_tick = current_tick
 	var record: Dictionary = {
-		"tick": current_tick, "op_class": chosen.op_class, "tier": chosen.tier, "cost": chosen.cost
+		"tick": current_tick,
+		"op_class": chosen.op_class,
+		"tier": chosen.tier,
+		"cost": chosen.cost,
+		"deck_index": chosen_index,
 	}
 	_purchase_log.append(record)
 	return record
@@ -257,6 +267,7 @@ func authorize_free_tier(deck: Array[DeckEntry], tier: int, current_tick: int) -
 		"tier": chosen.tier,
 		"cost": 0,
 		"authorized": true,
+		"deck_index": eligible_indices[pick],
 	}
 	_purchase_log.append(record)
 	return record
