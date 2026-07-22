@@ -15,11 +15,11 @@
 ## actually use — the auditor could only ever validate hand-built op
 ## instances or test doubles, never a real mission's real deck.
 ##
-## Only the four op classes with a real `_init()` today (Pass 9:
-## SubtitleDrift/AudioSwap/PhantomAudio/PhantomEntity) have a build_*
-## branch — the other six §4.2 taxonomy classes have no constructor to
-## call yet (roadmap.md's own "remaining ops" M5 item). `build()` asserts
-## clearly for those rather than returning null silently, matching
+## All eleven op classes (docs/forward_dev_plan.md Phase A: Pass 9's
+## original four plus HUDGlitch/ObjectSwap/FamiliarFace/EntityMask/
+## GeometrySwap/TimeGap/MemoryEdit) now have a real `_init()` and a
+## build_* branch here. `build()` still asserts clearly for any unknown
+## op_class string rather than returning null silently, matching
 ## MissionLoader's own established stance: "asserts on malformed input
 ## rather than handling it gracefully... a contract violation, not a
 ## runtime case to design around."
@@ -48,6 +48,20 @@ static func build(entry: DeckEntry) -> DistortionOp:
 			return _build_phantom_audio(entry.params)
 		"PhantomEntity":
 			return _build_phantom_entity(entry.params)
+		"HUDGlitch":
+			return _build_hud_glitch(entry.params)
+		"ObjectSwap":
+			return _build_object_swap(entry.params)
+		"FamiliarFace":
+			return _build_familiar_face(entry.params)
+		"EntityMask":
+			return _build_entity_mask(entry.params)
+		"GeometrySwap":
+			return _build_geometry_swap(entry.params)
+		"TimeGap":
+			return _build_time_gap(entry.params)
+		"MemoryEdit":
+			return _build_memory_edit(entry.params)
 	assert(
 		false,
 		(
@@ -91,6 +105,58 @@ static func _build_phantom_entity(params: Dictionary) -> PhantomEntity:
 		String(params["entity_kind"]),
 		facing,
 		String(params.get("dramatic_intent", "paranoia"))
+	)
+
+
+static func _build_hud_glitch(params: Dictionary) -> HUDGlitch:
+	return HUDGlitch.new(
+		String(params["target_element_id"]),
+		String(params["glitched_value"]),
+		String(params.get("dramatic_intent", "doubt"))
+	)
+
+
+static func _build_object_swap(params: Dictionary) -> ObjectSwap:
+	return ObjectSwap.new(
+		int(params["target_prop_id"]),
+		String(params["swapped_kind"]),
+		String(params.get("dramatic_intent", "paranoia"))
+	)
+
+
+static func _build_familiar_face(params: Dictionary) -> FamiliarFace:
+	return FamiliarFace.new(
+		int(params["target_actor_id"]),
+		String(params["familiar_face_id"]),
+		String(params.get("dramatic_intent", "grief"))
+	)
+
+
+static func _build_entity_mask(params: Dictionary) -> EntityMask:
+	return EntityMask.new(
+		int(params["target_actor_id"]), String(params.get("dramatic_intent", "dread"))
+	)
+
+
+static func _build_geometry_swap(params: Dictionary) -> GeometrySwap:
+	return GeometrySwap.new(
+		String(params["target_cell_id"]),
+		String(params["swapped_kind"]),
+		String(params.get("dramatic_intent", "doubt"))
+	)
+
+
+static func _build_time_gap(params: Dictionary) -> TimeGap:
+	return TimeGap.new(
+		int(params["duration_ticks"]), String(params.get("dramatic_intent", "dread"))
+	)
+
+
+static func _build_memory_edit(params: Dictionary) -> MemoryEdit:
+	return MemoryEdit.new(
+		String(params["target_entry_id"]),
+		String(params["edited_text"]),
+		String(params.get("dramatic_intent", "grief"))
 	)
 
 

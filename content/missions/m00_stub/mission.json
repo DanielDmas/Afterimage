@@ -52,6 +52,81 @@
         "phantom_facing_dir": { "x": -1, "y": 0 },
         "dramatic_intent": "paranoia"
       }
+    },
+    {
+      "op_class": "HUDGlitch",
+      "tier": 2,
+      "cost": 10,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "target_element_id": "clock",
+        "glitched_value": "23:41",
+        "dramatic_intent": "doubt"
+      }
+    },
+    {
+      "op_class": "ObjectSwap",
+      "tier": 2,
+      "cost": 12,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "target_prop_id": 7,
+        "swapped_kind": "pistol",
+        "dramatic_intent": "paranoia"
+      }
+    },
+    {
+      "op_class": "FamiliarFace",
+      "tier": 2,
+      "cost": 15,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "target_actor_id": 2,
+        "familiar_face_id": "eliska_ledger:jana_martinu",
+        "dramatic_intent": "grief"
+      }
+    },
+    {
+      "op_class": "EntityMask",
+      "tier": 3,
+      "cost": 25,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "target_actor_id": 3,
+        "dramatic_intent": "dread"
+      }
+    },
+    {
+      "op_class": "GeometrySwap",
+      "tier": 3,
+      "cost": 20,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "target_cell_id": "corridor_3",
+        "swapped_kind": "door",
+        "dramatic_intent": "doubt"
+      }
+    },
+    {
+      "op_class": "TimeGap",
+      "tier": 4,
+      "cost": 30,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "duration_ticks": 900,
+        "dramatic_intent": "dread"
+      }
+    },
+    {
+      "op_class": "MemoryEdit",
+      "tier": 4,
+      "cost": 30,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "target_entry_id": "night_3",
+        "edited_text": "Someone was waiting outside.",
+        "dramatic_intent": "grief"
+      }
     }
   ]
 }

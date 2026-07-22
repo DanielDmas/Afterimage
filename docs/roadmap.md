@@ -64,7 +64,7 @@
 ## M5 — Mission One for Real (w30–35)
 *Exit: the theater moment lands in playtests ("that's what happened?!").*
 - [ ] "Induction" full production (art, audio, deck, debrief spec) per its ground-truth doc (story_bible §4)
-- [ ] Remaining ops (`HUDGlitch`, `ObjectSwap`, `FamiliarFace`, `EntityMask`, `GeometrySwap`, `TimeGap`, `MemoryEdit`) + remaining archetypes (Heavy, Runner, Technician, Civilian)
+- [x] Remaining ops (`HUDGlitch`, `ObjectSwap`, `FamiliarFace`, `EntityMask`, `GeometrySwap`, `TimeGap`, `MemoryEdit`) *(docs/forward_dev_plan.md Phase A, post-arc: all seven now real `DistortionOp` subclasses in `src/percept/`, each with an `OpFactory.build()` branch and its own test file; `content/missions/m00_stub/mission.json`'s real deck now carries all 11 taxonomy classes and passes `FairnessAuditor` end to end (`tests/unit/test_mission_content_fairness.gd`). `EntityMask`/`GeometrySwap` — Charter rules 2/4's own classes — each gained a real "passes" test in `tests/unit/test_fairness_auditor.gd` alongside the rule's pre-existing `_FakeOp` failing fixture. Remaining archetypes (Heavy, Runner, Technician, Civilian) are still open — separate AI-archetype work, not part of this taxonomy pass.)*
 - [ ] Theater v1 (honesty report, export cards, streamer mode) — **AC:** export renders correctly at phone size (art_direction §8)
 - [ ] Adaptive music v1 (stem buses, band-driven thinning) — **AC:** mix sheet loudness targets verified
 - [ ] **Naming decision** (title-collision risk, master_plan §12) with trademark/storefront search — **AC:** decision recorded in §11.3 amendment

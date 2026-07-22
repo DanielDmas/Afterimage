@@ -16,16 +16,22 @@
 ##   percept/truth boundary (a phantom has no truth-layer counterpart to
 ##   deal damage with); this auditor additionally requires every
 ##   Phantom*-class entry to *declare* compliance via fairness_tags.
-## - Rule 2 (EntityMask never on damage-capable entities): not yet
-##   structurally enforceable (EntityMask isn't implemented — Pass 9 built
-##   4 of the 10 taxonomy classes) — this is real op-class-string matching
-##   against a required tag, ready for whenever EntityMask lands.
+## - Rule 2 (EntityMask never on damage-capable entities): this auditor's
+##   own check is real op-class-string matching against a required tag —
+##   `src/percept/entity_mask.gd` (docs/forward_dev_plan.md Phase A) adds
+##   a second, structural guarantee on top: it only ever masks an actor
+##   whose own snapshot entry explicitly says `is_damage_capable: false`,
+##   a key real TruthSim output never carries yet, so masking a real actor
+##   is impossible today regardless of what a mission author targets.
 ## - Rule 3 (inputs never distorted): structurally guaranteed by the
 ##   taxonomy itself (no op class touches input/aim/hit registration);
 ##   this auditor additionally requires every entry, regardless of class,
 ##   to declare that tag.
-## - Rule 4 (geometry never changes while observed): same status as rule 2
-##   — real string matching, ready for GeometrySwap.
+## - Rule 4 (geometry never changes while observed): this auditor's check
+##   is real string matching, same as rule 2 — `src/percept/geometry_swap.gd`
+##   (Phase A) declares the tag but honestly defers the "never mid-sight"
+##   structural half to whenever a real fog-of-war/visibility truth
+##   concept exists to check against (its own class doc names the gap).
 ## - Rule 5 (everything disclosable): every entry must declare it.
 ## - Rule 6 (Clarity Mode can flag it): structurally guaranteed by
 ##   ClarityMode.active_flags()'s `is DistortionOp` check (Pass 10) — this

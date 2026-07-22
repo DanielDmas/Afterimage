@@ -88,6 +88,76 @@ func test_op_factory_builds_phantom_entity_with_explicit_facing() -> void:
 	assert_eq((op as PhantomEntity).phantom_facing_dir, Vector2i(-1, 0))
 
 
+func test_op_factory_builds_hud_glitch_from_params() -> void:
+	var entry := DeckEntry.new(
+		"HUDGlitch", 2, 10, [], {"target_element_id": "clock", "glitched_value": "23:41"}
+	)
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is HUDGlitch)
+	assert_eq((op as HUDGlitch).target_element_id, "clock")
+	assert_eq((op as HUDGlitch).glitched_value, "23:41")
+
+
+func test_op_factory_builds_object_swap_from_params() -> void:
+	var entry := DeckEntry.new(
+		"ObjectSwap", 2, 12, [], {"target_prop_id": 7, "swapped_kind": "pistol"}
+	)
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is ObjectSwap)
+	assert_eq((op as ObjectSwap).target_prop_id, 7)
+	assert_eq((op as ObjectSwap).swapped_kind, "pistol")
+
+
+func test_op_factory_builds_familiar_face_from_params() -> void:
+	var entry := DeckEntry.new(
+		"FamiliarFace",
+		2,
+		15,
+		[],
+		{"target_actor_id": 2, "familiar_face_id": "eliska_ledger:jana_martinu"}
+	)
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is FamiliarFace)
+	assert_eq((op as FamiliarFace).target_actor_id, 2)
+	assert_eq((op as FamiliarFace).familiar_face_id, "eliska_ledger:jana_martinu")
+
+
+func test_op_factory_builds_entity_mask_from_params() -> void:
+	var entry := DeckEntry.new("EntityMask", 3, 25, [], {"target_actor_id": 3})
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is EntityMask)
+	assert_eq((op as EntityMask).target_actor_id, 3)
+	assert_eq(op.dramatic_intent, "dread")
+
+
+func test_op_factory_builds_geometry_swap_from_params() -> void:
+	var entry := DeckEntry.new(
+		"GeometrySwap", 3, 20, [], {"target_cell_id": "corridor_3", "swapped_kind": "door"}
+	)
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is GeometrySwap)
+	assert_eq((op as GeometrySwap).target_cell_id, "corridor_3")
+	assert_eq((op as GeometrySwap).swapped_kind, "door")
+
+
+func test_op_factory_builds_time_gap_from_params() -> void:
+	var entry := DeckEntry.new("TimeGap", 4, 30, [], {"duration_ticks": 900})
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is TimeGap)
+	assert_eq((op as TimeGap).duration_ticks, 900)
+	assert_eq(op.dramatic_intent, "dread")
+
+
+func test_op_factory_builds_memory_edit_from_params() -> void:
+	var entry := DeckEntry.new(
+		"MemoryEdit", 4, 30, [], {"target_entry_id": "night_3", "edited_text": "wrong"}
+	)
+	var op: DistortionOp = OpFactory.build(entry)
+	assert_true(op is MemoryEdit)
+	assert_eq((op as MemoryEdit).target_entry_id, "night_3")
+	assert_eq((op as MemoryEdit).edited_text, "wrong")
+
+
 ## Every real op_class OpFactory can build already sets its own
 ## fairness_tags correctly inside its own _init() (Pass 9/12) — proving
 ## this here closes the loop: content authoring params never touches
@@ -98,12 +168,15 @@ func test_built_ops_carry_their_own_hardcoded_fairness_tags() -> void:
 	assert_true("charter_rule_5_always_disclosable" in op.fairness_tags)
 
 
-## The actual, load-bearing proof.
+## The actual, load-bearing proof. All eleven §4.2 taxonomy classes now
+## have a real op_class entry in the committed mission (docs/forward_dev_plan.md
+## Phase A), so this one test exercises every OpFactory build_* branch
+## against real content, not just the four Pass 9 shipped with.
 func test_real_stub_mission_deck_builds_and_passes_the_fairness_auditor() -> void:
 	var package: MissionPackage = MissionLoader.load_from_file(
 		"res://content/missions/m00_stub/mission.json"
 	)
-	assert_eq(package.deck.size(), 4)
+	assert_eq(package.deck.size(), 11)
 
 	var built_ops: Array[DistortionOp] = []
 	for entry: DeckEntry in package.deck:

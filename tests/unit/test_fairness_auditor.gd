@@ -4,8 +4,11 @@ extends AfterimageTestCase
 ## Charter") and roadmap.md's AC ("each Charter rule has a fixture deck
 ## that fails it"): one deliberately-violating fixture per §4.5 rule below.
 ## _FakeOp lets each fixture control exactly one property at a time without
-## needing every taxonomy class (EntityMask/GeometrySwap aren't implemented
-## yet — Pass 9 built 4 of the 10) to already exist for real.
+## needing a real op class's own _init() (which always sets correct tags)
+## to cooperate in producing a broken one. docs/forward_dev_plan.md Phase
+## A has since landed real EntityMask/GeometrySwap classes, so this file
+## also carries a real-op "passes" test for each, alongside these
+## deliberately-broken _FakeOp fixtures for the failing half of each rule.
 
 
 ## A minimal stand-in DistortionOp — real op classes always set correct
@@ -75,6 +78,16 @@ func test_rule_1_phantom_missing_never_damages_tag_fails() -> void:
 	var deck: Array = [_FakeOp.new("PhantomEntity", tags_without_rule_1)]
 	var violations: Array = FairnessAuditor.validate(deck, 3)
 	assert_true(_any_violation_has_prefix(violations, "rule_1:"))
+
+
+func test_a_real_entity_mask_op_with_full_tags_passes() -> void:
+	var deck: Array = [EntityMask.new(9)]
+	assert_eq(FairnessAuditor.validate(deck, 3), [])
+
+
+func test_a_real_geometry_swap_op_with_full_tags_passes() -> void:
+	var deck: Array = [GeometrySwap.new("corridor_3", "door")]
+	assert_eq(FairnessAuditor.validate(deck, 3), [])
 
 
 func test_rule_2_entity_mask_missing_never_masks_damage_capable_tag_fails() -> void:
