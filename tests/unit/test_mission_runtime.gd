@@ -43,6 +43,15 @@ func test_rising_acute_stress_increases_granted_budget() -> void:
 	assert_gt(stressed_runtime.director.budget, calm_runtime.director.budget)
 
 
+func test_grant_scene_budget_adds_another_scenes_worth_on_top() -> void:
+	var deck: Array[DeckEntry] = [DeckEntry.new("SubtitleDrift", 1, 5, [])]
+	var runtime := MissionRuntime.new(_make_package(deck), 1, MindModel.new())
+	var after_construction: int = runtime.director.budget
+
+	runtime.grant_scene_budget()
+	assert_eq(runtime.director.budget, after_construction * 2)
+
+
 func test_defaults_to_a_fresh_mind_model_when_none_is_given() -> void:
 	var deck: Array[DeckEntry] = [DeckEntry.new("SubtitleDrift", 1, 5, [])]
 	var runtime := MissionRuntime.new(_make_package(deck), 1)

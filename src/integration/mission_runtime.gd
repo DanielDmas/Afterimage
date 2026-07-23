@@ -42,6 +42,19 @@ func _init(p_package: MissionPackage, seed: int, p_mind: MindModel = null) -> vo
 	package = p_package
 	mind = p_mind if p_mind != null else MindModel.new()
 	director = DistortionDirector.new(seed)
+	grant_scene_budget()
+
+
+## Grants one more scene-equivalent budget from whatever the MindModel's
+## current state is. §4.3 describes a single lump sum per discrete scene;
+## a caller modeling a longer, open-ended session as a sequence of such
+## beats (a real hub day, or a long exploration scene with no natural
+## single cut point) re-grants explicitly through this, at whatever
+## cadence its own design calls for — that policy decision belongs to the
+## caller, not this class. `_init()` itself calls this once, so a fresh
+## `MissionRuntime` always starts with its first scene's budget already
+## granted.
+func grant_scene_budget() -> void:
 	director.grant_budget(package.scene_type, _mind_values_fx(), package.mission_weights_fx)
 
 

@@ -1,37 +1,53 @@
-## The first playable slice, developed in three stages. Stage 1 (see
-## docs/dev_log.md's "First playable scene" entry) proved a real graybox
-## room driven by the actual TruthSim would run in a browser at all.
-## Stage 2 ("the thesis demo" — docs/review_and_forward_plan.md P2/P3)
-## closed the gaps that review found: the percept/truth seam is respected
-## (rendering reads TruthSim.capture_percept_snapshot() through
-## PerceptRenderer, never raw truth), the Ground verb is wired end to
-## end, every InputFrame is recorded into a real ReplayLog, and the
-## disclosure at the end is backed by a genuine ReplayTheater
-## re-simulation. Stage 3 (this revision, "make it actually playable" —
-## the user's own framing: "play it from the position of a curious and
-## smart player... make it fun and enjoyable... engaging") is a player-
-## experience pass over that same real mechanism, not a new one: a second,
-## visually distinct distortion (a PhantomEntity sighting, alongside the
-## original SubtitleDrift) so the demo shows two different kinds of lie
-## instead of one; a player-chosen objective (a marked exit) instead of an
-## invisible proximity timer deciding when the session ends; an onboarding
-## hint (nothing told the player Ground existed before this); visual
-## feedback while holding Ground (a vignette that ramps with the real
-## hold duration, GroundState.DURATION_TICKS); and a restart loop, since a
-## demo that dead-ends at the reveal panel forever is not "nicely
-## playable" — the reveal is a beat, not the end of the process. None of
-## this is a new mechanism: it is the same TruthSim/PerceptRenderer/
-## DriftEncounter/ReplayTheater machinery Stage 2 already proved, staged
-## and paced like something a stranger would actually enjoy running
-## through.
+## The first playable slice, developed in four stages. Stage 1 proved a
+## real graybox room driven by the actual TruthSim would run in a browser
+## at all. Stage 2 ("the thesis demo") closed the percept/truth/Ground/
+## ReplayTheater gaps with two hand-scripted encounters (`DriftEncounter`/
+## `PhantomEncounter`). Stage 3 was a player-experience pass over that
+## same hand-scripted pair (a marked exit, onboarding, a Ground vignette,
+## a restart loop, branching reveal text). Stage 4 (this revision,
+## docs/forward_dev_plan.md Phase B) retires the hand-scripted pair
+## entirely: `DriftEncounter`/`PhantomEncounter` are deleted, and the
+## scene is driven by the real content pipeline instead —
+## `MissionLoader` loads the actual committed `content/missions/m00_stub/
+## mission.json`, and `MissionRuntime` (a seeded `DistortionDirector` +
+## `MindModel` + `OpFactory`) purchases and instantiates whichever of the
+## mission's 11 real op classes its budget affords, exactly as a real
+## mission will. Nothing here is scripted per-position any more; every
+## distortion the player sees is content, not code, per the Ground Rules'
+## own §4 ("content is data").
 ##
-## Every Godot API here was checked against the real 4.3 class docs before
-## use (docs.godotengine.org, reachable from this sandbox even though the
-## engine binary/export templates are not) — see the dev_log entry for
-## the specific facts verified this way. Stage 3 additionally verified
-## Node.create_tween()/Tween.tween_property()'s exact signatures (the
-## phantom's "shimmers and dissolves" fade) before use, since no earlier
-## pass in this codebase had used Tween at all.
+## Two honest gaps this stage doesn't paper over: (1) most of the 11
+## op classes render nothing visible in this graybox room (HUDGlitch,
+## ObjectSwap, GeometrySwap, TimeGap, MemoryEdit operate on percept-
+## snapshot keys — hud_elements, props, geometry_cells, journal_entries —
+## that this demo's TruthSim never populates; EntityMask is structurally
+## inert against the one real actor here, which never carries
+## `is_damage_capable: false`) — the reveal panel still discloses them
+## honestly (Charter rule 5) with a generic "this op isn't rendered in
+## this demo yet" line rather than pretending nothing happened. (2) this
+## graybox room has no combat, so `MindModelEventBridge`'s WeaponFired/
+## ActorDowned wiring never fires — the Director's budget stays modest,
+## granted once per scene (§4.3) *and* re-granted every
+## `BUDGET_REGRANT_INTERVAL_TICKS` (this scene's own policy choice for a
+## longer, open-ended session than §4.3's single-cut-point "scene"
+## describes — `MissionRuntime.grant_scene_budget()`'s own doc names this
+## explicitly as the caller's call to make).
+##
+## The `MissionRuntime`/`DistortionDirector` purchase seed is `randi()`,
+## not fixed — deliberately: the truth-layer determinism guarantee
+## (tech_guidelines.md §3.1 — the same recorded `ReplayLog` always
+## re-simulates the same *true* positions/events, proven below by
+## `ReplayTheater`) is completely independent of which distortions a
+## given session happened to draw, the same way two real playthroughs of
+## one mission can each roll a different purchase sequence without either
+## being less "real." A random seed here just means restarting the demo
+## draws a fresh set of distortions instead of the identical one every
+## time — replay value, not a determinism violation.
+##
+## Every Godot API here was checked against the real 4.3 class docs
+## before use (docs.godotengine.org, reachable from this sandbox even
+## though the engine binary/export templates are not) — see the dev_log
+## entries for the specific facts verified this way.
 extends Node2D
 
 const CELL_SIZE_MM: int = 500
@@ -45,6 +61,17 @@ const EXIT_RADIUS_MM: int = 400
 
 const GROUND_VIGNETTE_MAX_ALPHA: float = 0.35
 const PHANTOM_DISSOLVE_SECONDS: float = 1.0  # master_plan.md §4.2: "~1 s"
+
+const MISSION_PACKAGE_PATH: String = "res://content/missions/m00_stub/mission.json"
+const BUDGET_REGRANT_INTERVAL_TICKS: int = 300  # 10s at the fixed 30Hz tick rate
+
+## The scene's own authored "true" line whenever a SubtitleDrift is
+## active — this demo's TruthSim has no dialogue system (SubtitleDrift's
+## own class doc: "dialogue doesn't exist as a truth concept yet"), so
+## the percept-snapshot "subtitle" key this op operates on is synthesized
+## here, the same hand-built-fact discipline every SubtitleDrift test
+## already uses.
+const AMBIENT_SUBTITLE_TRUE_TEXT: String = "Footsteps. Someone was there."
 
 ## World mm -> screen px. Chosen so the room's full rendered extent,
 ## including its perimeter walls (7000x5000mm), fits inside the 640x360
@@ -77,8 +104,20 @@ const _EXIT_COLOR: Color = Color(0.247, 0.722, 0.686)  # club_teal (§5) — the
 var _sim: TruthSim
 var _event_bus: EventBus
 var _replay: ReplayLog
-var _drift: DriftEncounter
-var _phantom: PhantomEncounter
+var _mission_package: MissionPackage
+var _runtime: MissionRuntime
+var _mind_event_bridge: MindModelEventBridge
+
+## Every purchase MissionRuntime ever makes, in order, as
+## {op: DistortionOp, tick: int} — the reveal panel's own record, built
+## locally because DistortionDirector.purchase_log() only keeps plain
+## data (op_class/tier/cost/tick/deck_index), not the live instance with
+## its actual authored params (a SubtitleDrift's real drifted_text, an
+## AudioSwap's real swapped_tag) the disclosure text needs to quote.
+var _disclosure_log: Array[Dictionary] = []
+var _ground_completion_ticks: Array[int] = []
+var _last_seen_active_op_count: int = 0
+var _next_budget_grant_tick: int = 0
 
 var _tick_accumulator: float = 0.0
 var _ground_completions: int = 0
@@ -101,6 +140,7 @@ var _reveal_panel: Control
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(_BG_COLOR)
 	_bind_input_keys()
+	_mission_package = MissionLoader.load_from_file(MISSION_PACKAGE_PATH)
 
 	_world_root = Node2D.new()
 	add_child(_world_root)
@@ -214,10 +254,13 @@ func _build_hud() -> void:
 
 
 ## Resets every piece of session state and rebuilds the room fresh — the
-## restart loop this stage added, since freezing forever at the reveal
-## panel (Stage 2's behavior) is a dead end, not "nicely playable." Called
-## once from _ready() and again every time the player presses Enter after
-## reaching the reveal panel.
+## restart loop Stage 3 added, since freezing forever at the reveal panel
+## is a dead end, not "nicely playable." Called once from _ready() and
+## again every time the player presses Enter after reaching the reveal
+## panel. `_mission_package` itself is not reloaded (content doesn't
+## change between restarts); a fresh `MissionRuntime` (fresh seed, fresh
+## MindModel) is built each time, so each restart draws its own
+## independent purchase sequence.
 func _start_new_session() -> void:
 	for child: Node in _world_root.get_children():
 		child.queue_free()
@@ -229,8 +272,15 @@ func _start_new_session() -> void:
 	_event_bus.subscribe("GroundCompleted", _on_ground_completed)
 	_sim = _make_sim(_event_bus)
 	_replay = ReplayLog.new(0, "afterimage-web-demo")
-	_drift = DriftEncounter.new()
-	_phantom = PhantomEncounter.new()
+
+	var mind := MindModel.new()
+	_mind_event_bridge = MindModelEventBridge.new(mind, _event_bus)
+	_runtime = MissionRuntime.new(_mission_package, randi(), mind)
+
+	_disclosure_log = []
+	_ground_completion_ticks = []
+	_last_seen_active_op_count = 0
+	_next_budget_grant_tick = BUDGET_REGRANT_INTERVAL_TICKS
 
 	_tick_accumulator = 0.0
 	_ground_completions = 0
@@ -323,18 +373,36 @@ func _step_sim() -> void:
 
 	var snapshot: Dictionary = _sim.capture_percept_snapshot()
 	var ground_just_completed: bool = bool(snapshot.get("ground_just_completed", false))
+	var current_tick: int = _sim.clock.current_tick
 
-	_drift.maybe_trigger(_sim.player_position(), _sim.clock.current_tick)
-	_drift.advance(_sim.clock.current_tick, ground_just_completed)
+	if current_tick >= _next_budget_grant_tick:
+		_runtime.grant_scene_budget()
+		_next_budget_grant_tick = current_tick + BUDGET_REGRANT_INTERVAL_TICKS
 
-	_phantom.maybe_trigger(_sim.player_position(), _sim.clock.current_tick)
-	_phantom.advance(_sim.clock.current_tick, ground_just_completed)
+	_runtime.step(current_tick, ground_just_completed)
+	_track_purchases_and_resolutions(current_tick, ground_just_completed)
 
 	_ground_hold_ticks = _ground_hold_ticks + 1 if grounding else 0
 
 	if not _session_ended and _reached_exit(_sim.player_position()):
 		_session_ended = true
 		_show_reveal_panel()
+
+
+## MissionRuntime clears every active op the instant Ground resolves them
+## all, so the only way to keep the reveal panel's own disclosure record
+## (which needs each op's real authored fields, not just the plain-data
+## purchase_log()) is to notice new active_ops entries the tick they
+## appear, before a later Ground clears them.
+func _track_purchases_and_resolutions(current_tick: int, ground_just_completed: bool) -> void:
+	if ground_just_completed:
+		_ground_completion_ticks.append(current_tick)
+		_last_seen_active_op_count = 0
+		return
+	var active_op_count: int = _runtime.active_ops.size()
+	for i: int in range(_last_seen_active_op_count, active_op_count):
+		_disclosure_log.append({"op": _runtime.active_ops[i], "tick": current_tick})
+	_last_seen_active_op_count = active_op_count
 
 
 static func _reached_exit(position_mm: Vector2i) -> bool:
@@ -349,12 +417,11 @@ func _on_ground_completed(_event: Dictionary) -> void:
 
 func _update_visuals() -> void:
 	var truth_snapshot: Dictionary = _sim.capture_percept_snapshot()
-	var active_ops: Array = []
-	if _drift.is_active():
-		truth_snapshot["subtitle"] = _drift.subtitle_truth_fact()
-		active_ops.append(_drift.op)
-	if _phantom.is_active():
-		active_ops.append(_phantom.op)
+	var active_ops: Array = _runtime.active_ops
+	if _active_ops_contain_subtitle_drift(active_ops):
+		truth_snapshot["subtitle"] = {
+			"speaker_id": "unknown", "true_text": AMBIENT_SUBTITLE_TRUE_TEXT
+		}
 	var percept: Dictionary = PerceptRenderer.render(truth_snapshot, active_ops)
 
 	var pos_mm: Vector2i = _sim.player_position()
@@ -373,8 +440,8 @@ func _update_visuals() -> void:
 
 	# Charter rule 6 (§4.5): "Clarity Mode can flag distortions in real time
 	# with a subtle vignette... fully honorable way to play." ClarityMode
-	# itself has existed since Pass 10 with no consumer until now — this is
-	# the plainest possible one (a text line, not a vignette), always on
+	# itself has existed since Pass 10 with no consumer until Stage 3 — this
+	# is the plainest possible one (a text line, not a vignette), always on
 	# rather than a real settings toggle (Pass 19's accessibility UI never
 	# got built), but it is the real mechanism, not a placeholder string.
 	_clarity_label.text = (
@@ -385,13 +452,21 @@ func _update_visuals() -> void:
 	_update_ground_vignette()
 
 
+static func _active_ops_contain_subtitle_drift(active_ops: Array) -> bool:
+	for op: PerceptOp in active_ops:
+		if op is SubtitleDrift:
+			return true
+	return false
+
+
 ## Renders the phantom actor PhantomEntity.apply() adds to the percept
 ## snapshot (never the truth snapshot — Pass 8's boundary) as an extra
 ## Sprite2D, and fades it out (§4.2's "shimmers and dissolves over ~1 s")
 ## the moment it stops being in the percept — whether that's because it
-## was grounded or because its own display window simply ran out;
-## PerceptEncounter's own Charter-rule-5 guarantee means both paths are
-## real disclosure, not just one of them.
+## was grounded or its own tier-3+ spacing means it never gets purchased
+## again. Generic over *any* active PhantomEntity, not tied to a specific
+## scripted encounter any more — MissionRuntime may purchase it at any
+## tick the Director's draw picks it.
 func _update_phantom_sprite(percept: Dictionary) -> void:
 	var phantom_actor: Dictionary = {}
 	for actor: Dictionary in percept.get("actors", []) as Array:
@@ -426,8 +501,8 @@ func _dissolve_phantom_sprite() -> void:
 ## Ramps with the real Ground hold duration (GroundState.DURATION_TICKS),
 ## not an independent cosmetic timer — the vignette reaches full
 ## intensity on exactly the tick Ground actually completes, so the
-## feedback is honest about what the mechanic is doing, not decorative
-## guesswork layered on top of it.
+## feedback is honest about what the mechanic is actually doing tick to
+## tick.
 ##
 ## Reassigns the whole `color` property rather than writing
 ## `_ground_vignette.color.a = ...` directly: verified against the real
@@ -450,11 +525,12 @@ func _update_ground_vignette() -> void:
 ## The disclosure: builds a real ReplayTheater re-simulation of the whole
 ## recorded session (proving the tick-perfect reconstruction mechanism
 ## against a genuinely freely-played session, re-checked at the exact
-## tick the player chose to end it) and shows what was actually true
-## against what the drift/phantom encounters rendered, Charter rule 5
-## ("everything is disclosable") made concrete for both distortions this
-## demo carries — including the honest case where the player rushed past
-## one, or both, without ever triggering them at all.
+## tick the player chose to end it) and discloses every real op
+## MissionRuntime ever purchased this session — Charter rule 5
+## ("everything is disclosable") made concrete for the real content
+## pipeline, not two hand-picked encounters. Honestly covers the case
+## where nothing was ever purchased at all (a real, possible outcome now
+## that budget is finite and the Director's draw is genuinely uncertain).
 func _show_reveal_panel() -> void:
 	if _reveal_panel != null:
 		return
@@ -476,10 +552,15 @@ func _show_reveal_panel() -> void:
 	_reveal_panel.add_child(backdrop)
 
 	var lines: PackedStringArray = PackedStringArray(["THE AFTERIMAGE", ""])
-	lines.append_array(_drift_reveal_lines())
-	lines.append("")
-	lines.append_array(_phantom_reveal_lines())
-	lines.append("")
+	if _disclosure_log.is_empty():
+		lines.append("You reached the door without anything seeming out of place.")
+		lines.append("")
+	else:
+		for entry: Dictionary in _disclosure_log:
+			var op: DistortionOp = entry["op"]
+			var was_grounded: bool = _was_grounded_after(entry["tick"])
+			lines.append_array(_disclosure_lines_for(op, was_grounded))
+			lines.append("")
 	lines.append(
 		(
 			"Reconstructed from the replay: tick %d, you were at (%d, %d)"
@@ -490,44 +571,78 @@ func _show_reveal_panel() -> void:
 	lines.append("Press ENTER to walk it again.")
 
 	var text_label := Label.new()
-	text_label.position = Vector2(24, 56)
-	text_label.size = Vector2(VIEWPORT_SIZE_PX.x - 48, 260)
+	text_label.position = Vector2(24, 40)
+	text_label.size = Vector2(VIEWPORT_SIZE_PX.x - 48, 300)
 	text_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	text_label.add_theme_color_override("font_color", _PANEL_TEXT_COLOR)
 	text_label.text = "\n".join(lines)
 	_reveal_panel.add_child(text_label)
 
 
-func _drift_reveal_lines() -> PackedStringArray:
-	if _drift.op == null:
-		return PackedStringArray(["You reached the door without hearing anything unusual."])
-	return PackedStringArray(
-		[
-			'You heard: "%s"' % DriftEncounter.DRIFTED_TEXT,
-			'Truth:     "%s"' % DriftEncounter.TRUE_TEXT,
-			(
-				"Grounded in the moment: %s"
-				% ("yes" if _drift.was_grounded else "no — disclosed anyway")
-			),
-		]
-	)
+## MissionRuntime clears its *entire* active_ops list on every Ground
+## completion (§4.6: "resolves all active ops in scope simultaneously") —
+## so any purchase still un-resolved at a later Ground completion tick was
+## necessarily swept up in it. A purchase is therefore "grounded" iff any
+## Ground-completion tick happened strictly after it was purchased.
+func _was_grounded_after(purchase_tick: int) -> bool:
+	for ground_tick: int in _ground_completion_ticks:
+		if ground_tick > purchase_tick:
+			return true
+	return false
 
 
-func _phantom_reveal_lines() -> PackedStringArray:
-	if _phantom.op == null:
-		return PackedStringArray(
-			["You reached the door without seeing anything that wasn't there."]
-		)
-	return PackedStringArray(
-		[
-			"You saw a figure standing nearby.",
-			"Truth:     nobody was there.",
-			(
-				"Grounded in the moment: %s"
-				% ("yes" if _phantom.was_grounded else "no — disclosed anyway")
-			),
-		]
+## Per-op-class flavor text for the disclosure log. Covers the four
+## classes this graybox demo can actually render something for
+## (SubtitleDrift via the subtitle label, PhantomEntity/PhantomAudio/
+## AudioSwap via their own real fields) with real, specific text quoting
+## the op's own authored params — and falls back honestly for the other
+## seven real taxonomy classes m00_stub's deck can also purchase, rather
+## than silently omitting them: Charter rule 5 doesn't have an exception
+## for "the demo can't show this one yet."
+static func _disclosure_lines_for(op: DistortionOp, was_grounded: bool) -> PackedStringArray:
+	var grounded_line: String = (
+		"Grounded in the moment: %s" % ("yes" if was_grounded else "no — disclosed anyway")
 	)
+	match op.op_class:
+		"SubtitleDrift":
+			var sd: SubtitleDrift = op as SubtitleDrift
+			return PackedStringArray(
+				[
+					'You heard: "%s"' % sd.drifted_text,
+					'Truth:     "%s"' % AMBIENT_SUBTITLE_TRUE_TEXT,
+					grounded_line,
+				]
+			)
+		"PhantomEntity":
+			return PackedStringArray(
+				["You saw a figure standing nearby.", "Truth:     nobody was there.", grounded_line]
+			)
+		"AudioSwap":
+			var audio_swap: AudioSwap = op as AudioSwap
+			return PackedStringArray(
+				[
+					'You heard: "%s"' % audio_swap.swapped_tag,
+					"Truth:     a different, ordinary sound.",
+					grounded_line,
+				]
+			)
+		"PhantomAudio":
+			var phantom_audio: PhantomAudio = op as PhantomAudio
+			return PackedStringArray(
+				[
+					'You heard: "%s" — from nowhere.' % phantom_audio.phantom_tag,
+					"Truth:     no sound at all.",
+					grounded_line,
+				]
+			)
+		_:
+			return PackedStringArray(
+				[
+					"Something else happened here (%s, tier %d)." % [op.op_class, op.tier],
+					"This graybox demo doesn't render that one yet — see forward_dev_plan.md.",
+					grounded_line,
+				]
+			)
 
 
 static func _find_actor(actors: Array, id: int) -> Dictionary:
