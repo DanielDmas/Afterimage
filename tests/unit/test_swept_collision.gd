@@ -129,3 +129,35 @@ func test_move_with_collision_zero_delta_is_a_no_op() -> void:
 		Vector2i(42, 7), 100, Vector2i.ZERO, grid
 	)
 	assert_eq(result, Vector2i(42, 7))
+
+
+## Wall sliding: the exact bug a live Web-build playtest hit. An actor
+## flush against a wall, pushed diagonally (one component into the wall,
+## one along it), must still move along the wall — not wedge because the
+## into-wall component cancelled the whole move. Here a wall spans world
+## x >= 1000; the actor sits flush against it (radius 100, center x 900)
+## and is pushed +x (into the wall) and +y (along it). The +x must be
+## blocked and the +y must fully apply.
+func test_move_with_collision_slides_along_a_wall_instead_of_wedging() -> void:
+	var grid := CollisionGrid.new(500)
+	grid.set_cell_blocked(Vector2i(2, 0), true)  # world x in [1000,1500], y in [0,500]
+	grid.set_cell_blocked(Vector2i(2, 1), true)  # world x in [1000,1500], y in [500,1000]
+	var start := Vector2i(900, 200)  # flush against the wall's x=1000 face (900+100)
+	var result: Vector2i = SweptCollision.move_with_collision(start, 100, Vector2i(300, 300), grid)
+	assert_eq(result.x, 900, "into-wall component must stay blocked")
+	assert_eq(result.y, 500, "along-wall component must fully apply (the slide)")
+
+
+## The complementary guarantee: a blocked *slide* axis must not let the
+## into-wall axis leak through. Pushing purely into the wall still stops
+## short, exactly as the single-axis stop test already covers — restated
+## here as a diagonal whose along-wall component is zero, to pin that
+## axis-separated resolution didn't accidentally start cutting corners on
+## the blocked axis.
+func test_move_with_collision_pure_into_wall_still_stops_short() -> void:
+	var grid := CollisionGrid.new(500)
+	grid.set_cell_blocked(Vector2i(2, 2), true)  # world [1000,1500]x[1000,1500]
+	var result: Vector2i = SweptCollision.move_with_collision(
+		Vector2i(0, 1500), 100, Vector2i(1200, 0), grid
+	)
+	assert_eq(result, Vector2i(900, 1500))

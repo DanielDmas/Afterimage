@@ -784,3 +784,86 @@ Everything above shipped. The branch that carried the entire project — the rat
 Also still true and still worth stating plainly: whether `content/*.json` survives into an *exported* Web build's PCK has never been runtime-exercised — the export job proves the build completes, not that a running instance can `FileAccess.open()` a bundled mission file. `export_presets.cfg` uses `export_filter="all_resources"` with empty include/exclude filters, which is standard Godot behavior and should cover it, but there is no browser automation in this sandbox to click through an exported build and confirm it firsthand. First real browser playtest should check that before anything else.
 
 **Next:** `docs/forward_dev_plan.md` Phases C–G, starting with C (the debrief loop — `ClaimReducer`, consequence channels through `GameStateStore`, a `DebriefScreen` data class). The one acceptance item still open from Phase B is a determinism-corpus fixture for a full `MissionRuntime`-driven run.
+
+---
+
+## Post-release: wall-sliding collision fix (found by playing the deployed build)
+
+The user enabled GitHub Pages, so the Web build is now live at
+`https://danieldmas.github.io/Afterimage/`. That unblocked the one thing this
+sandbox could never do before: **actually run the deployed game.** Chromium +
+Playwright are available here, so instead of leaving "does the exported build
+boot and load its content" as an unverified assumption (flagged in the release
+entry above), I loaded the real artifact and drove it.
+
+**First, the good news — the release verification everyone had been taking on
+faith is now real:** I pulled the deployed PCK and confirmed
+`res://content/missions/m00_stub/mission.json` is inside it with its full
+content (`"drifted_text": "Multiple hostiles, fall back!"`, `"swapped_tag":
+"muffled_thud"`, etc.), then served the exact deployed build over loopback and
+loaded it headless. Godot v4.3.stable booted, the WebGL2 compatibility renderer
+came up, the HUD ticked, and — the whole point — the `DistortionDirector`
+purchased a real op from the mission content and the ClarityMode line lit up
+("reality feels off right now"). Holding Space Grounded it: the counter went
+`resolved 0` → `resolved 1` and the ClarityMode line cleared. The full content
+pipeline runs end to end in a browser, confirmed by observation, not assumption.
+
+**Then the bug.** Driving the player toward the exit, it **wedged** against the
+bottom wall at exactly (4843, 3749) and could not walk the last stretch to the
+door — identical position across 500+ ticks of holding Right+Down. Root cause in
+`SweptCollision.move_with_collision()`: it computed a single `earliest_t` across
+both axes and scaled the *whole* delta by it. Pressing diagonally against a
+wall, the into-wall component contacts at t≈0, so both components got scaled to
+≈0 — the along-wall slide was cancelled by the blocked axis. You could not slide
+along a wall; any diagonal push into one stopped you dead. For a top-down
+movement game that is a real playability bug (and it violates "missions must be
+fun sober" — I literally could not complete the trivial demo objective).
+
+**The fix**, in two parts, both consistent with conventions this codebase had
+already committed to elsewhere:
+1. **Axis-separated resolution.** `move_with_collision()` now resolves X, then Y
+   from the X-resolved position, via a `_sweep_single_move()` helper that is the
+   old single-sweep body verbatim. A blocked axis no longer cancels the free
+   one. Fixed X-then-Y order is a determinism commitment; the known tradeoff is
+   mild corner-cutting on an exact-diagonal-into-a-corner, documented in the
+   method's own doc as the same class of accepted simplification as the existing
+   square-corner sweep.
+2. **Tangency is not collision, on the parallel axis too.** The swept
+   primitive's zero-motion-axis slab test was inclusive (`p < lo or p > hi`),
+   so an actor whose center comes to rest *exactly* on a wall's expanded face —
+   which is precisely where a resolved stop lands it — was treated as
+   overlapping and could not then slide along that face. Made it exclusive
+   (`p <= lo or p >= hi`), matching `circles_overlap()`'s already-established
+   "exactly touching is tangency, not overlap" rule (its own test
+   `test_circles_exactly_touching_do_not_count_as_overlapping`). Without this,
+   axis-separated resolution alone still re-wedged any actor the instant it went
+   flush against a wall.
+
+Both changes were hand-traced against the exact Minkowski-expanded-slab geometry
+before committing (the same "verify the arithmetic externally" discipline this
+class was originally built under), and checked against every existing
+`test_swept_collision.gd` case: all the swept-primitive tests exercise either a
+moving axis (unaffected) or a parallel axis that's strictly outside the slab
+(same result under `<=`), and all four `move_with_collision` tests are
+single-axis or no-block cases that axis-separated resolution reproduces exactly.
+The determinism corpus is self-consistency-based (re-simulate twice, compare —
+no hardcoded golden hash), so the changed collision behavior for `run_003`'s
+diagonal-into-a-corner stays green by construction; `run_002` walks straight
+into the east wall (pure axis), unchanged. No other test asserts a position
+after a diagonal-into-wall move.
+
+**2 new regression tests** (`test_swept_collision.gd`): the wall-slide case that
+reproduces the live wedge (push diagonally against a wall → into-wall component
+blocked, along-wall component fully applies), and an explicit restatement that a
+pure into-wall push still stops short. Suite goes to **611**.
+
+**Files changed:** `src/sim/swept_collision.gd` (axis-separated
+`move_with_collision` + `_sweep_single_move` helper + exclusive parallel-slab
+boundary), `tests/unit/test_swept_collision.gd` (+2 tests).
+
+**Verification note, honest:** this sandbox has no Godot binary, so the fix
+itself is verified by the new unit tests (via CI) and by hand-tracing — not yet
+by re-playing it in a browser, because that needs a fresh Web export, which the
+push produces automatically and Pages now auto-deploys. Re-playing the live
+build to confirm the slide reaches the exit and opens the Afterimage is the
+immediate next check once that deploy lands.
