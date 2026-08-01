@@ -52,8 +52,19 @@ static func circle_vs_aabb_swept(
 		var hi: int = exp_max.x if axis == 0 else exp_max.y
 
 		if d == 0:
-			if p < lo or p > hi:
-				return NO_HIT  # parallel to this slab and outside it: never hits
+			if p <= lo or p >= hi:
+				# Parallel to this slab and outside it (or exactly tangent to
+				# its face) never hits. The boundary is exclusive on purpose,
+				# matching circles_overlap()'s "exactly touching is not
+				# overlapping" convention: an actor grazing a wall's face on
+				# the non-moving axis is touching, not penetrating, so it must
+				# be free to slide along that face rather than being pinned by
+				# it. Without this, axis-separated move_with_collision() would
+				# still wedge an actor the instant it came to rest flush
+				# against a wall (its resolved stop lands its center exactly on
+				# the expanded face), which is exactly the wall it then wants
+				# to slide along.
+				return NO_HIT
 			# else: unconstrained on this axis, t_enter/t_exit untouched
 		else:
 			var t1: int = FixedMath.div(FixedMath.from_int(lo - p), FixedMath.from_int(d))
@@ -83,13 +94,47 @@ static func circles_overlap(p0: Vector2i, r0: int, p1: Vector2i, r1: int) -> boo
 
 
 ## Resolves a requested move against every blocked cell in `grid`,
-## returning the actor's safe new position: the full move if nothing
-## blocks it, or clamped to just short of the earliest impact along the
-## path. Iterates every currently-blocked cell (no spatial broad-phase) —
-## an appropriately-scoped choice while levels are small/nonexistent
-## (Pass 7 graybox); revisit only once profiling on a real level calls
-## for it (tech_guidelines.md §11.1).
+## returning the actor's safe new position — with wall sliding: a move
+## with one component into a wall still applies the other component,
+## instead of the whole move cancelling.
+##
+## Resolves the two axes independently and in a fixed order (X, then Y
+## from the X-resolved position). This is the standard top-down
+## wall-slide model, and it fixes a real playability bug the single-t
+## sweep had: pressing diagonally against a wall computed one earliest_t
+## (≈0, because the into-wall component contacts immediately) and scaled
+## *both* components by it, so an actor flush against a wall couldn't
+## slide along it at all — it wedged. A live playtest of the Web build
+## hit exactly this: the player pinned against the bottom wall could not
+## walk the last stretch to the exit. Axis-separated resolution keeps the
+## blocked axis blocked while the free axis moves.
+##
+## The fixed X-then-Y order is a determinism commitment (tech_guidelines
+## §3.1): the same input always resolves the same way. The known tradeoff
+## of axis-separated resolution is mild corner-cutting on a pure diagonal
+## into an exact corner (the free axis advances before the other axis's
+## contact is considered) — acceptable for a top-down action game with
+## thick walls and small per-tick deltas, the same class of documented
+## simplification as the square-corner sweep above; revisit only if a
+## real level's geometry ever makes it feel wrong.
 static func move_with_collision(
+	p0: Vector2i, radius_mm: int, delta: Vector2i, grid: CollisionGrid
+) -> Vector2i:
+	if delta == Vector2i.ZERO:
+		return p0
+	var after_x: Vector2i = _sweep_single_move(p0, radius_mm, Vector2i(delta.x, 0), grid)
+	return _sweep_single_move(after_x, radius_mm, Vector2i(0, delta.y), grid)
+
+
+## One axis-or-diagonal sweep against every blocked cell: the full move if
+## nothing blocks it, or clamped to just short of the earliest impact
+## along the path. Iterates every currently-blocked cell (no spatial
+## broad-phase) — an appropriately-scoped choice while levels are
+## small/nonexistent (Pass 7 graybox); revisit only once profiling on a
+## real level calls for it (tech_guidelines.md §11.1). `move_with_collision`
+## calls this once per axis; it also stands on its own as the exact
+## single-sweep-to-first-contact primitive the earlier passes relied on.
+static func _sweep_single_move(
 	p0: Vector2i, radius_mm: int, delta: Vector2i, grid: CollisionGrid
 ) -> Vector2i:
 	if delta == Vector2i.ZERO:

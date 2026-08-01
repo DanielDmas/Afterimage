@@ -99,6 +99,15 @@ jobs:
   deploy-pages:
     name: Deploy to GitHub Pages
     needs: build-web
+    # Only the default branch deploys to the live public site. The
+    # `github-pages` environment is protected to the default branch, so a
+    # deploy attempt from a feature branch is rejected instantly by that
+    # gate and shows up as a confusing red failure on every PR — even
+    # though the build itself succeeded and the artifact is fine. Gating
+    # the job here turns that into a clean skip: feature-branch pushes
+    # still produce a downloadable `afterimage-web-build` artifact (via the
+    # build-web job above), and only merges to main publish.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       pages: write
