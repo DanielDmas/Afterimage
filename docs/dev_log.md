@@ -867,3 +867,31 @@ by re-playing it in a browser, because that needs a fresh Web export, which the
 push produces automatically and Pages now auto-deploys. Re-playing the live
 build to confirm the slide reaches the exit and opens the Afterimage is the
 immediate next check once that deploy lands.
+
+---
+
+## Post-release: the wall-slide fix, confirmed live (loop closed)
+
+The collision-fix entry above ended with an honest open item: the fix was
+verified by unit tests and hand-tracing, but "re-playing the live build to
+confirm the slide reaches the exit and opens the Afterimage is the immediate
+next check once that deploy lands." That deploy landed (the Pages gate now
+publishes from `main`), and the check was done — it passes.
+
+Re-downloaded the freshly-deployed build (its PCK size changed, 403408 →
+404016 bytes, confirming the collision fix is compiled in), served it over
+loopback, and drove the player toward the exit headless. Where the pre-fix
+build wedged permanently at (4843, 3749), the fixed build **slid along the
+bottom wall to (5256, 3749) and reached the exit** — and reaching it opened
+THE AFTERIMAGE: a real `PhantomAudio` op disclosed ("You heard:
+'footsteps_behind_you' — from nowhere. Truth: no sound at all."), the honest
+Charter-rule-5 fallback for a `HUDGlitch` this room can't render yet, and a
+`ReplayTheater` reconstruction line ("Reconstructed from the replay: tick 385,
+you were at (5256, 3749)") proving the tick-perfect re-simulation runs in the
+browser too. Zero page errors throughout.
+
+That closes every verification loop this session opened around the deployed
+build: content survives into the exported PCK, the full MissionRuntime/
+DistortionDirector/OpFactory pipeline runs live, the Ground verb resolves live,
+the wall-slide fix works live, and the Afterimage + ReplayTheater path runs
+live — all confirmed by actually playing the public build, not by assumption.
