@@ -1132,3 +1132,61 @@ different player positions on the real deployed build, is stronger
 confirmation than the API being correctly called — it's the actual
 on-screen behavior matching hand-computed angles, not assumed from the
 code alone. Zero `pageerror`s throughout.
+
+---
+
+## Post-release: shareable reveal export (Interlude backlog item 6)
+
+master_plan.md's own marketing beat — "shareable honesty reports" —
+delivered in `scenes/main.gd`: pressing E while the reveal panel is up
+captures the whole viewport (the panel is a translucent overlay over the
+room, so this is exactly what's on screen) as a PNG and triggers a real
+browser download, no server round-trip.
+
+**The chain, each link verified against the real 4.3 docs before use, not
+assumed:**
+- `get_viewport().get_texture()` → `ViewportTexture` (a `Texture2D`) →
+  `.get_image()` → `Image`. The docs carry their own caution: the texture
+  "might be completely black or outdated if used too early" unless
+  `RenderingServer.frame_post_draw` is awaited first — cheap to do
+  regardless of whether this particular call site (an input-event
+  handler, not `_ready()`) would actually hit that case.
+- `Image.save_png_to_buffer() -> PackedByteArray` — confirmed as the
+  buffer-returning sibling of the file-writing `save_png()`, which is
+  what a Web export needs (no filesystem to write to).
+- `JavaScriptBridge.download_buffer(buffer, name, mime)` — confirmed
+  exact signature, and confirmed the class itself is "implemented only in
+  the Web export."
+
+**The one design decision that mattered more than any single API call:**
+that last fact means a bare, statically-typed `JavaScriptBridge.foo(...)`
+reference isn't just inert on other platforms — it's a reference this
+*script* has to parse correctly on every platform that ever loads it,
+including the headless-Godot-on-plain-Linux unit-test CI job (never a Web
+export). Whether that class name even resolves there is exactly the kind
+of cross-platform assumption Pass 6's `Lean.Side` bug (this log, way
+above) taught this codebase not to take on faith when a verified-safe
+alternative exists. It does here: `Engine.has_singleton("JavaScriptBridge")`
+/ `Engine.get_singleton("JavaScriptBridge")` (confirmed: returns `null`
+for an unregistered name, no error) resolve the singleton by string at
+runtime, never as a static type — `.call("download_buffer", ...)` on the
+returned `Object` sidesteps the question of whether the class name
+resolves at parse time on a platform that doesn't have it, entirely.
+
+**What's confirmed by docs vs. what still needs a live check:** every
+individual API fact above is doc-verified. What isn't yet independently
+confirmed is the one thing no doc page settles by definition — a
+real headless-browser download actually landing when the key is pressed
+on the deployed build. Playwright can observe a real browser download
+event directly (`page.on('download')`), so this is fully live-verifiable
+the same way the wall-slide fix and the audio/arrow passes were; that
+check is the next step before calling this pass fully closed.
+
+**Verification so far:** clean against `gdlint`/`gdformat --check`/
+`tools/percept_truth_boundary_lint.py`/`tools/content_validator.py`/
+`tools/dlgc.py` locally before commit.
+
+**Files changed:** `scenes/main.gd` (`REVEAL_EXPORT_*` consts, the
+`export_reveal` input binding, `_export_reveal_image()`, a new reveal-panel
+hint line); `docs/forward_dev_plan.md` (Interlude backlog item 6 marked
+delivered).
