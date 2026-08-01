@@ -1190,3 +1190,33 @@ check is the next step before calling this pass fully closed.
 `export_reveal` input binding, `_export_reveal_image()`, a new reveal-panel
 hint line); `docs/forward_dev_plan.md` (Interlude backlog item 6 marked
 delivered).
+
+**Confirmed green** ([PR #10](https://github.com/DanielDmas/Afterimage/pull/10),
+merge commit `202cdf4`): both CI jobs and the Web export build succeeded —
+including the headless-Godot-on-Linux unit test job, confirming
+`Engine.has_singleton("JavaScriptBridge")` really does sidestep the
+parse-time cross-platform question this entry worried about (log reads
+`ALL PASSED (615/615)`, pulled as real text, not assumed from the badge).
+
+**Confirmed live** — the one thing no doc page could settle: re-ran the
+headless-Chromium-over-loopback rig against the freshly redeployed build
+(`index.pck` grew to 413856 bytes), walked to the exit to raise the
+reveal panel, then pressed E and used Playwright's own
+`page.waitForEvent("download")` to observe the browser's real download
+mechanism directly, not inferred from absence of an error. Result: a real
+download fired, `suggestedFilename` exactly `"afterimage_reveal.png"` (the
+`REVEAL_EXPORT_FILENAME` const), served from a `blob:` URL — the browser
+mechanism `JavaScriptBridge.download_buffer()` documents itself as using.
+Saved the downloaded file and confirmed it's a genuine, valid PNG,
+`640x360` (exactly `VIEWPORT_SIZE_PX`), showing the real reveal panel
+content for that run — "THE AFTERIMAGE" title, the actual disclosure
+lines for the ops that session's `MissionRuntime` purchased, and the
+HUD text bleeding through translucently in the background, exactly as
+rendered on screen. Zero `pageerror`s throughout.
+
+This closes the Interlude backlog completely (items 2, 3, and 6 — the
+genuinely-buildable-in-sandbox items) with every one confirmed working on
+the real deployed build, not just passing CI. Items 4 (more than one
+room) and 5 (camera follow/zoom, which explicitly depends on item 4) are
+the only backlog entries left, and both are real content-authoring work
+rather than a scene-script pass.
