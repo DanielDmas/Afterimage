@@ -1,0 +1,9 @@
+4.3.0-stable
+
+# This file is the single source of truth for which Godot build this project
+# targets (tech_guidelines.md D1). Update it only as part of the milestone-
+# boundary upgrade procedure described there, and note the change in
+# tech_guidelines.md §12 (Amendment Log).
+#
+# Editor + CI must use exactly this version. Official build only, from
+# https://godotengine.org/download/archive/ — no forks, no third-party builds.

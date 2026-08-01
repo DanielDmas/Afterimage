@@ -1,0 +1,132 @@
+{
+  "id": "mission.m00_stub",
+  "scene_type": "combat",
+  "mission_weights": {
+    "acute_stress": 1.0,
+    "fatigue": 0.5,
+    "moral_injury": 1.5,
+    "identity_strain": 0.2
+  },
+  "encounter_cap": 3,
+  "deck": [
+    {
+      "op_class": "AudioSwap",
+      "tier": 1,
+      "cost": 8,
+      "variable_affinity": ["acute_stress"],
+      "params": {
+        "target_source_id": 1,
+        "swapped_tag": "muffled_thud",
+        "dramatic_intent": "doubt"
+      }
+    },
+    {
+      "op_class": "PhantomAudio",
+      "tier": 1,
+      "cost": 8,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "phantom_position": { "x": 2000, "y": 500 },
+        "phantom_tag": "footsteps_behind_you",
+        "dramatic_intent": "dread"
+      }
+    },
+    {
+      "op_class": "SubtitleDrift",
+      "tier": 1,
+      "cost": 5,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "drifted_text": "Multiple hostiles, fall back!",
+        "dramatic_intent": "paranoia"
+      }
+    },
+    {
+      "op_class": "PhantomEntity",
+      "tier": 3,
+      "cost": 25,
+      "variable_affinity": ["moral_injury", "identity_strain"],
+      "params": {
+        "phantom_position": { "x": 4000, "y": 1500 },
+        "entity_kind": "armed_figure",
+        "phantom_facing_dir": { "x": -1, "y": 0 },
+        "dramatic_intent": "paranoia"
+      }
+    },
+    {
+      "op_class": "HUDGlitch",
+      "tier": 2,
+      "cost": 10,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "target_element_id": "clock",
+        "glitched_value": "23:41",
+        "dramatic_intent": "doubt"
+      }
+    },
+    {
+      "op_class": "ObjectSwap",
+      "tier": 2,
+      "cost": 12,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "target_prop_id": 7,
+        "swapped_kind": "pistol",
+        "dramatic_intent": "paranoia"
+      }
+    },
+    {
+      "op_class": "FamiliarFace",
+      "tier": 2,
+      "cost": 15,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "target_actor_id": 2,
+        "familiar_face_id": "eliska_ledger:jana_martinu",
+        "dramatic_intent": "grief"
+      }
+    },
+    {
+      "op_class": "EntityMask",
+      "tier": 3,
+      "cost": 25,
+      "variable_affinity": ["moral_injury"],
+      "params": {
+        "target_actor_id": 3,
+        "dramatic_intent": "dread"
+      }
+    },
+    {
+      "op_class": "GeometrySwap",
+      "tier": 3,
+      "cost": 20,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "target_cell_id": "corridor_3",
+        "swapped_kind": "door",
+        "dramatic_intent": "doubt"
+      }
+    },
+    {
+      "op_class": "TimeGap",
+      "tier": 4,
+      "cost": 30,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "duration_ticks": 900,
+        "dramatic_intent": "dread"
+      }
+    },
+    {
+      "op_class": "MemoryEdit",
+      "tier": 4,
+      "cost": 30,
+      "variable_affinity": ["fatigue"],
+      "params": {
+        "target_entry_id": "night_3",
+        "edited_text": "Someone was waiting outside.",
+        "dramatic_intent": "grief"
+      }
+    }
+  ]
+}

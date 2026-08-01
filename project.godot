@@ -1,0 +1,123 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes to the same file as [section.subsection]
+;
+; Locked decisions this file encodes — see docs/tech_guidelines.md:
+;   D1  Godot 4.3.x pinned (see docs/ENGINE_VERSION for the exact patch)
+;   D6  640x360 logical resolution, integer-scaled, letterboxed
+;   D11 InputMap actions only — gameplay verbs are named here as they land.
+;       Pass 6 names the combat-verb actions (move/sprint/crouch/lean/aim/
+;       fire/reload/takedown/throw/Focus, master_plan.md §4.9) with empty
+;       "events" arrays: no default key/button binding is assigned yet.
+;       Deliberate — hand-authoring a Godot InputEventKey resource literal
+;       with no editor available to generate/verify it risked a wrong
+;       keycode more than it was worth, and key-binding choice is properly
+;       ux_charter.md's "full remapping" scope (Pass 19), not this pass's
+;       (combat-verb *logic*). Declaring the action names now unblocks
+;       everything that references them by name; tests/unit/test_input_map.gd
+;       asserts every one of them actually registered.
+
+config_version=5
+
+[application]
+
+config/name="Afterimages: Vranov"
+config/description="A psychological action thriller about a mind you cannot trust — including yours."
+config/tags=PackedStringArray("top-down", "action", "thriller", "2d")
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+boot_splash/show_image=false
+config/icon="res://icon.png"
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+window/vsync/vsync_mode=1
+
+[debug]
+
+; tech_guidelines.md D2: GDScript is statically typed, warnings-as-errors.
+gdscript/warnings/treat_warnings_as_errors=true
+
+[input]
+
+move_up={
+"deadzone": 0.2,
+"events": []
+}
+move_down={
+"deadzone": 0.2,
+"events": []
+}
+move_left={
+"deadzone": 0.2,
+"events": []
+}
+move_right={
+"deadzone": 0.2,
+"events": []
+}
+sprint={
+"deadzone": 0.2,
+"events": []
+}
+crouch={
+"deadzone": 0.2,
+"events": []
+}
+lean_left={
+"deadzone": 0.2,
+"events": []
+}
+lean_right={
+"deadzone": 0.2,
+"events": []
+}
+aim={
+"deadzone": 0.2,
+"events": []
+}
+fire={
+"deadzone": 0.2,
+"events": []
+}
+reload={
+"deadzone": 0.2,
+"events": []
+}
+takedown={
+"deadzone": 0.2,
+"events": []
+}
+throw={
+"deadzone": 0.2,
+"events": []
+}
+focus={
+"deadzone": 0.2,
+"events": []
+}
+
+[physics]
+
+; TruthSim owns its own deterministic collision (tech_guidelines.md §3.4);
+; Godot's physics server is not part of the simulation contract and is left
+; at engine defaults for any cosmetic/presentation-only use.
+common/enable_pause_aware_picking=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+environment/defaults/default_environment=""

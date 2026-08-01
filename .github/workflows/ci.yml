@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+env:
+  GODOT_VERSION: "4.3-stable"
+  GODOT_ARCHIVE: "Godot_v4.3-stable_linux.x86_64.zip"
+  GODOT_BIN: "Godot_v4.3-stable_linux.x86_64"
+
+jobs:
+  test:
+    name: Unit test suite (headless Godot)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Cache Godot download
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.godot-bin
+          key: godot-${{ env.GODOT_VERSION }}-linux-x86_64
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ github.workspace }}/.godot-bin"
+          cd "${{ github.workspace }}/.godot-bin"
+          curl -fL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_ARCHIVE}"
+          unzip -q godot.zip
+          chmod +x "${GODOT_BIN}"
+
+      - name: Sanity-check the binary and print its version
+        run: |
+          set -euo pipefail
+          echo "docs/ENGINE_VERSION pins:"
+          cat docs/ENGINE_VERSION
+          echo "---"
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" --headless --version
+
+      - name: Import project (builds the global class_name cache)
+        # A fresh checkout has no .godot/ import cache (it's gitignored, as it
+        # should be), so class_name globals like AfterimageTestRunner aren't
+        # resolvable yet — Godot only registers them after scanning the
+        # project once. --editor --quit does exactly that scan/import pass
+        # without opening a display. The exit code from this pass is not
+        # meaningful (a benign warning can make it nonzero); the next step is
+        # what actually verifies anything, and it starts from a warm cache.
+        run: |
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" \
+            --headless --path . --editor --quit || true
+
+      - name: Run unit test suite
+        run: |
+          set -euo pipefail
+          "${{ github.workspace }}/.godot-bin/${GODOT_BIN}" \
+            --headless --path . --script res://tests/run_tests.gd
+
+  lint:
+    name: GDScript style lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install gdtoolkit
+        run: pip install "gdtoolkit==4.*"
+
+      - name: gdlint (style/lint rules)
+        run: gdlint src/ tests/ scenes/
+
+      - name: gdformat --check (formatting must already match gdformat's output)
+        run: gdformat --check src/ tests/ scenes/
+
+      - name: percept/truth architecture boundary (master_plan.md §5.2)
+        run: python3 tools/percept_truth_boundary_lint.py
+
+      - name: content package schema validation (tech_guidelines.md D7/§5.1)
+        run: python3 tools/content_validator.py
+
+      - name: dialogue DSL compile check (foundation_blueprints.md §4.1)
+        run: python3 tools/dlgc.py
