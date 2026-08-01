@@ -65,6 +65,35 @@ const PHANTOM_DISSOLVE_SECONDS: float = 1.0  # master_plan.md §4.2: "~1 s"
 const MISSION_PACKAGE_PATH: String = "res://content/missions/m00_stub/mission.json"
 const BUDGET_REGRANT_INTERVAL_TICKS: int = 300  # 10s at the fixed 30Hz tick rate
 
+## Procedural audio — no asset files, synthesized at runtime into a real
+## AudioStreamWAV (verified against the real 4.3 docs before use: the
+## `format`/`loop_mode` enum values are engine-exposed constants accessed
+## directly as `AudioStreamWAV.FORMAT_16_BITS`, not through an intermediate
+## enum-type name the way this codebase's own GDScript enums are — a real,
+## confirmed distinction, not assumed). Named in
+## docs/forward_dev_plan.md's own "Interlude" backlog as genuinely
+## buildable with zero asset files; built here, its own dedicated pass as
+## that entry asked for.
+const AUDIO_MIX_RATE: int = 44100
+const GROUND_CHIME_NOTE_SECONDS: float = 0.09
+const GROUND_CHIME_NOTE1_HZ: float = 660.0  # E5
+const GROUND_CHIME_NOTE2_HZ: float = 880.0  # A5 — a small rising "confirmed" cue
+const GROUND_CHIME_VOLUME_DB: float = -6.0
+const GROUND_CHIME_ATTACK_SECONDS: float = 0.003  # avoids an audible click on note-start
+
+## A low, faintly uneasy drone — the audible twin of the Clarity Mode line,
+## on for exactly as long as "reality feels off right now" is shown. Two
+## oscillators (a steady tone plus a slow tremolo) so the loop point is
+## click-free: DISTORTION_HUM_SECONDS holds a whole number of cycles of
+## *both* frequencies, so phase and amplitude both land back where they
+## started — the same reasoning a real synth's loop-point editor would
+## apply, done by picking round numbers instead.
+const DISTORTION_HUM_SECONDS: float = 1.0
+const DISTORTION_HUM_BASE_HZ: float = 60.0  # 60 whole cycles in 1s
+const DISTORTION_HUM_TREMOLO_HZ: float = 6.0  # 6 whole cycles in 1s
+const DISTORTION_HUM_TREMOLO_DEPTH: float = 0.35
+const DISTORTION_HUM_VOLUME_DB: float = -22.0
+
 ## The scene's own authored "true" line whenever a SubtitleDrift is
 ## active — this demo's TruthSim has no dialogue system (SubtitleDrift's
 ## own class doc: "dialogue doesn't exist as a truth concept yet"), so
@@ -135,6 +164,8 @@ var _objective_label: Label
 var _clarity_label: Label
 var _subtitle_label: Label
 var _reveal_panel: Control
+var _ground_chime_player: AudioStreamPlayer
+var _distortion_hum_player: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -145,6 +176,7 @@ func _ready() -> void:
 	_world_root = Node2D.new()
 	add_child(_world_root)
 	_build_hud()
+	_build_audio()
 	_start_new_session()
 
 
@@ -253,6 +285,92 @@ func _build_hud() -> void:
 	add_child(_subtitle_label)
 
 
+## Built exactly once, like the HUD: two AudioStreamPlayers holding two
+## synthesized AudioStreamWAV streams. The chime is one-shot (triggered
+## per Ground completion, _on_ground_completed()); the hum loops for as
+## long as the caller wants it playing (_update_visuals() starts/stops it
+## opposite the Clarity Mode line) — its stream's own `loop_mode` does the
+## looping, not a script-side re-trigger.
+func _build_audio() -> void:
+	_ground_chime_player = AudioStreamPlayer.new()
+	_ground_chime_player.stream = _build_ground_chime_stream()
+	_ground_chime_player.volume_db = GROUND_CHIME_VOLUME_DB
+	add_child(_ground_chime_player)
+
+	_distortion_hum_player = AudioStreamPlayer.new()
+	_distortion_hum_player.stream = _build_distortion_hum_stream()
+	_distortion_hum_player.volume_db = DISTORTION_HUM_VOLUME_DB
+	add_child(_distortion_hum_player)
+
+
+## A small rising two-note cue (E5 then A5), each note a decaying sine
+## with a short linear attack ramp so neither note starts with an audible
+## click (a sine sampled starting exactly at amplitude 0 with no ramp-in
+## still clicks in practice, because the *slope* at t=0 is discontinuous
+## with silence — the ramp fixes the slope, not just the level).
+static func _build_ground_chime_stream() -> AudioStreamWAV:
+	var samples: PackedFloat32Array = PackedFloat32Array()
+	samples.append_array(_decaying_sine_samples(GROUND_CHIME_NOTE1_HZ, GROUND_CHIME_NOTE_SECONDS))
+	samples.append_array(_decaying_sine_samples(GROUND_CHIME_NOTE2_HZ, GROUND_CHIME_NOTE_SECONDS))
+	return _wav_from_samples(samples, false)
+
+
+static func _decaying_sine_samples(freq_hz: float, duration_seconds: float) -> PackedFloat32Array:
+	var count: int = int(round(duration_seconds * AUDIO_MIX_RATE))
+	var attack_samples: int = maxi(1, int(round(GROUND_CHIME_ATTACK_SECONDS * AUDIO_MIX_RATE)))
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	for i: int in range(count):
+		var t: float = float(i) / float(AUDIO_MIX_RATE)
+		var envelope: float = 1.0 - (float(i) / float(count))  # linear decay to 0
+		if i < attack_samples:
+			envelope *= float(i) / float(attack_samples)
+		samples[i] = sin(TAU * freq_hz * t) * envelope
+	return samples
+
+
+## A steady low tone amplitude-modulated by a slower tremolo — both
+## frequencies complete a whole number of cycles across
+## DISTORTION_HUM_SECONDS (60 and 6 respectively, over exactly 1 second),
+## so the waveform returns to the same phase and amplitude at the loop
+## point: a click-free loop by construction, not by trimming.
+static func _build_distortion_hum_stream() -> AudioStreamWAV:
+	var count: int = int(round(DISTORTION_HUM_SECONDS * AUDIO_MIX_RATE))
+	var samples := PackedFloat32Array()
+	samples.resize(count)
+	for i: int in range(count):
+		var t: float = float(i) / float(AUDIO_MIX_RATE)
+		var tremolo: float = (
+			1.0
+			- DISTORTION_HUM_TREMOLO_DEPTH * (0.5 + 0.5 * sin(TAU * DISTORTION_HUM_TREMOLO_HZ * t))
+		)
+		samples[i] = sin(TAU * DISTORTION_HUM_BASE_HZ * t) * tremolo * 0.8
+	return _wav_from_samples(samples, true)
+
+
+## Converts float samples in [-1, 1] into a real AudioStreamWAV: 16-bit
+## mono PCM, little-endian (PackedByteArray.encode_s16()'s own documented
+## format, matching AudioStreamWAV's own documented raw-data layout).
+## `loop` sets loop_mode to span the whole buffer — the caller is
+## responsible for having made that buffer actually loop cleanly.
+static func _wav_from_samples(samples: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = AUDIO_MIX_RATE
+	stream.stereo = false
+	var data := PackedByteArray()
+	data.resize(samples.size() * 2)
+	for i: int in range(samples.size()):
+		var clamped: float = clampf(samples[i], -1.0, 1.0)
+		data.encode_s16(i * 2, int(round(clamped * 32767.0)))
+	stream.data = data
+	if loop:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_begin = 0
+		stream.loop_end = samples.size()
+	return stream
+
+
 ## Resets every piece of session state and rebuilds the room fresh — the
 ## restart loop Stage 3 added, since freezing forever at the reveal panel
 ## is a dead end, not "nicely playable." Called once from _ready() and
@@ -290,6 +408,7 @@ func _start_new_session() -> void:
 	_ground_vignette.color = Color(
 		_PANEL_TEXT_COLOR.r, _PANEL_TEXT_COLOR.g, _PANEL_TEXT_COLOR.b, 0.0
 	)
+	_distortion_hum_player.stop()
 
 	_build_world_visuals()
 	_update_visuals()
@@ -413,6 +532,7 @@ static func _reached_exit(position_mm: Vector2i) -> bool:
 
 func _on_ground_completed(_event: Dictionary) -> void:
 	_ground_completions += 1
+	_ground_chime_player.play()
 
 
 func _update_visuals() -> void:
@@ -444,9 +564,16 @@ func _update_visuals() -> void:
 	# is the plainest possible one (a text line, not a vignette), always on
 	# rather than a real settings toggle (Pass 19's accessibility UI never
 	# got built), but it is the real mechanism, not a placeholder string.
-	_clarity_label.text = (
-		"" if ClarityMode.active_flags(active_ops).is_empty() else "reality feels off right now"
-	)
+	var distortion_active: bool = not ClarityMode.active_flags(active_ops).is_empty()
+	_clarity_label.text = "reality feels off right now" if distortion_active else ""
+	# The hum is the audible twin of that same line — started/stopped on the
+	# rising/falling edge only, never re-triggered every frame it stays true
+	# (AudioStreamPlayer.play() restarts a stream from the beginning, which
+	# would chop the loop into an audible stutter if called every tick).
+	if distortion_active and not _distortion_hum_player.playing:
+		_distortion_hum_player.play()
+	elif not distortion_active and _distortion_hum_player.playing:
+		_distortion_hum_player.stop()
 
 	_update_phantom_sprite(percept)
 	_update_ground_vignette()
