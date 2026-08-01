@@ -957,3 +957,60 @@ plan named is now delivered, not partially.
 
 **Files changed:** `docs/forward_dev_plan.md` (Phase B marked "FULLY
 DELIVERED", the last open acceptance item closed out).
+
+---
+
+## Post-release: procedural audio — the Interlude backlog's item 3, delivered
+
+`docs/forward_dev_plan.md`'s own Interlude backlog named this the one item
+deferred for its own dedicated pass: no audio asset pipeline exists in this
+sandbox, but Godot can synthesize real audio *in code*, with zero asset
+files. Delivered in `scenes/main.gd`: two cues, both real `AudioStreamWAV`
+buffers built at `_ready()` time, not placeholders.
+
+**API choice, and why it differs from what the backlog entry originally
+named:** the backlog text guessed `AudioStreamGenerator` (a live push-buffer
+API meant for audio that changes every frame, e.g. continuous procedural
+noise). Neither cue here needs that — a rising two-note Ground chime and a
+steady distortion hum are both fixed, precomputable waveforms — so
+`AudioStreamWAV` (a plain static buffer, verified against the real 4.3 docs
+before use) is the simpler and more deterministic fit: build the samples
+once, hand them to the stream, done. Construction verified against the real
+docs point by point: `format = AudioStreamWAV.FORMAT_16_BITS` and
+`loop_mode = AudioStreamWAV.LOOP_FORWARD` are engine-exposed C++ enum
+constants accessed directly on the class (no intermediate enum-type name),
+confirmed as a real, deliberate distinction from this codebase's own
+GDScript enums (`MovementProfile.Mode.SPRINT`) which *do* need one, not an
+assumption carried over by habit. Samples are written via
+`PackedByteArray.encode_s16(byte_offset, value)`, its own documented
+little-endian signed-16-bit layout.
+
+**The two cues:**
+- **Ground chime** (`_build_ground_chime_stream()`): a rising two-note cue
+  (E5 then A5, 0.09s each), each note a decaying sine with a short linear
+  attack ramp. The ramp exists because a sine sampled starting at amplitude
+  0 with no ramp-in still clicks in practice — the *slope* at t=0 is
+  discontinuous against silence, and the ramp fixes the slope, not just the
+  level. One-shot, triggered from `_on_ground_completed()`.
+- **Distortion hum** (`_build_distortion_hum_stream()`): a low 60Hz tone
+  amplitude-modulated by a slow 6Hz tremolo, looping for exactly as long as
+  Clarity Mode's "reality feels off right now" line is shown — its audible
+  twin, started/stopped only on the rising/falling edge in
+  `_update_visuals()` (never re-triggered every frame it stays true:
+  `AudioStreamPlayer.play()` restarts from the beginning, which would chop
+  a held loop into an audible stutter). The loop point is click-free by
+  construction rather than by trimming: both 60 and 6 complete a whole
+  number of cycles across the buffer's 1-second duration, so phase and
+  amplitude both land back where they started at the seam.
+
+**Verification:** clean against `gdlint`/`gdformat --check`/
+`tools/percept_truth_boundary_lint.py`/`tools/content_validator.py`/
+`tools/dlgc.py` locally before commit. `scenes/main.gd` carries no
+`class_name` and has never had direct unit-test coverage in this codebase
+(every other scene-integration change this session was verified the same
+way) — the real verification is CI plus playing the freshly deployed live
+build, matching the precedent the wall-slide fix set two passes ago.
+
+**Files changed:** `scenes/main.gd` (`_build_audio()` and four static
+helpers, HUD-audio wiring); `docs/forward_dev_plan.md` (Interlude backlog
+item 3 marked delivered).
