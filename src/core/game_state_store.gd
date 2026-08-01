@@ -27,6 +27,14 @@ func _init(event_bus: EventBus = null) -> void:
 ## small in Pass 2 — MindModel, claims, suspicion, etc. add their own
 ## branches under "campaign" as their own passes land, never by widening
 ## this file's responsibilities.
+##
+## `doubek_trust`/`resource_budget` are Phase C's debrief consequence
+## channels (docs/forward_dev_plan.md, master_plan.md §4.10/§4.13) —
+## `DebriefConsequences.bill()` computes the deltas, `DebriefLedger.submit_claim()`
+## writes them here when a caller supplies a GameStateStore. 50/100 are
+## arbitrary mid-scale starting points (no spec pins a starting value,
+## same as MindModel's own 0-centered variables), not a tuned balance
+## number — real tuning is a playtest question, not an engineering one.
 static func default_state() -> Dictionary:
 	return {
 		"schema_version": SaveMigrations.CURRENT_SCHEMA_VERSION,
@@ -34,6 +42,8 @@ static func default_state() -> Dictionary:
 		{
 			"day": 0,
 			"flags": {},
+			"doubek_trust": 50,
+			"resource_budget": 100,
 		},
 	}
 

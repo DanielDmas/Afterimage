@@ -1220,3 +1220,139 @@ the real deployed build, not just passing CI. Items 4 (more than one
 room) and 5 (camera follow/zoom, which explicitly depends on item 4) are
 the only backlog entries left, and both are real content-authoring work
 rather than a scene-script pass.
+
+---
+
+## Phase C — the debrief loop's core logic: ClaimReducer, DebriefConsequences, DebriefScreen
+
+With the Interlude backlog closed, this returns to `docs/forward_dev_plan.md`'s
+own named phase sequence — Phase C, "the debrief loop," the mechanism
+behind master_plan.md §4.10's "quiet knife": a claim drafted from a
+believed phantom must look identical to one drafted from something real,
+so only the hidden truth-delta at submission — never the drafting step —
+can tell them apart.
+
+**`src/debrief/claim_reducer.gd`** (`ClaimReducer`, new) — two static
+reductions into the `{id, subject, predicate, object, qualifiers?}` shape
+`ClaimDrafter.draft_from_perceived_events()` already consumes:
+- `reduce_sightings(percept_snapshots)` reads a *percept* view (never
+  truth) and drafts one `saw_entity` claim per actor id, on the first tick
+  it's ever present (rising edge only — a sighting is discrete, not
+  something to re-assert every tick an actor happens to keep standing
+  there). A `PhantomEntity`'s percept-only actor entry (`percept/phantom_entity.gd`'s
+  own shape: `{id, position, entity_kind, is_alive, is_phantom}`, negative
+  id) runs through the exact same code as a real actor's — this is the
+  quiet knife, mechanically. `qualifiers.actor_id` carries the real
+  numeric id for whatever later needs to look up ground truth by it (the
+  caller, at submission — never this class, which stays percept-only by
+  discipline even though `src/debrief/` sits outside `tools/percept_truth_boundary_lint.py`'s
+  `src/percept/`-only scan scope).
+- `reduce_downed_events(downed_events)` reduces real `ActorDowned`
+  `EventBus` facts (`{"id": target_id}`, `src/sim/truth_sim.gd`) the caller
+  collected during a run — `EventBus` has no built-in history
+  (confirmed by reading its own class doc before assuming otherwise), so
+  a caller subscribing and collecting is the established pattern
+  (`MindModelEventBridge`'s own precedent).
+
+**Scope decision, stated honestly rather than silently narrowed:** the
+plan's own wording said "a believed-phantom `PhantomEntity` the player
+*shot*." What's built is sightings, not shots — reducing a `WeaponFired`
+event into "who the player believed they hit" needs `CombatResolver`'s
+targeting geometry redone against percept data instead of truth (a real
+target's `hit_id` is never a phantom's, since phantoms don't exist in
+truth's target list at all per Charter rule 1), which is a separate,
+larger piece of work than this pass's scope. Sightings alone already
+prove the mechanism the acceptance test names literally: "an honest
+As-Seen claim about a phantom comes back false." Recorded as an open
+scope note in `docs/forward_dev_plan.md`, not folded into "delivered."
+
+**`src/debrief/debrief_consequences.gd`** (`DebriefConsequences`, new) —
+a pure `bill(mode, truth_delta) -> {trust_delta, resource_delta}`.
+master_plan.md §4.10/§4.13 pin the *shape* of this math ("an honest error
+costs less trust than a fabrication," "[Doubek's operational budget]
+scales with trust and with verified claims") but no actual numbers —
+unlike MindModel's §4.4 or the Director's §4.3, both given explicit
+constants. Chosen, and documented as chosen rather than derived: AS_SEEN
+true +2 trust, AS_SEEN false −1, VERIFIED_ONLY true +3 trust/+5 resources
+("compounds," per §4.10, and is the one channel §4.13 ties resources to
+specifically), VERIFIED_ONLY false −2 (an edge case that shouldn't arise
+in normal play — armored provenance should make the object always true —
+but handled rather than left to crash), FABRICATE always −3 trust
+regardless of truth_delta. −3 is deliberately steeper than −1, satisfying
+§4.10's one real constraint directly. Deliberately does *not* model
+discovery (§4.10: a fabrication's full cost lands "when discovered" via
+"diegetic" cross-checking machinery) — what's billed here is Doubek's own
+immediate base-rate skepticism, smaller than a discovered lie would cost,
+which is exactly what keeps the ordering right even before any discovery
+mechanic exists.
+
+**`src/core/game_state_store.gd`** — `default_state()` gained
+`["campaign", "doubek_trust"]` (50) and `["campaign", "resource_budget"]`
+(100), arbitrary mid-scale starting points (no spec pins one, same as
+MindModel's own variables) — the extension point that class's own doc
+comment already named ("MindModel, claims, suspicion, etc. add their own
+branches under 'campaign' as their own passes land").
+
+**`src/debrief/debrief_ledger.gd`** — `submit_claim()` gained an optional
+`game_state: GameStateStore = null` parameter, mirroring the existing
+optional `moral_injury` parameter exactly (same "caller-supplied, backward
+compatible, no side effect if omitted" shape). When supplied: writes
+`DebriefConsequences.bill()`'s trust/resource deltas, and — on `FABRICATE`
+specifically — a `["campaign", "flags", "claim_<id>_fabricated"]` plot
+flag: the flag itself, not the discovery mechanic that reads it later
+(§4.10's own deferred future work), because that future mechanic has
+nothing to *find* without this write existing first. The returned record
+dict gained `trust_delta`/`resource_delta` keys — checked against every
+existing `test_debrief_ledger.gd` case first: none asserted whole-dict
+equality, only specific keys, so this is a backward-compatible addition,
+not a breaking one.
+
+**`src/ui/debrief_screen.gd`** (`DebriefScreen`, new) — `MindDashboardScreen`'s
+exact precedent (a data class, not a `.tscn`, since no Godot editor exists
+in this sandbox to verify a hand-authored scene against): one row per
+`DebriefLedger` candidate, with `available_modes` excluding
+`VERIFIED_ONLY` unless the claim actually carries `GROUNDED`/`EVIDENCE`
+provenance — the same eligibility `DebriefLedger.submit_claim()`'s own
+assert enforces, surfaced here as a query so a future real UI only ever
+offers legal choices instead of hitting that assert. `screen_reader_text()`
+follows ux_charter §4's "screen-reader on all paperwork/menu screens."
+
+**`tests/unit/test_debrief_pipeline_integration.gd`** (new, 2 tests) — the
+acceptance criterion's own wording, executed literally: a real `GrayboxRoom`
+`TruthSim` + a real `MissionRuntime` (a `PhantomEntity`-only deck, budget
+forced high) run for 9 ticks; every tick's percept snapshot
+(`PerceptRenderer.render()`, exactly what a live scene would show) is
+collected; `ClaimReducer.reduce_sightings()` reduces two sightings — the
+real player and the phantom — from the exact same code path; both draft
+through `ClaimDrafter`; both submit through a real `DebriefLedger` with a
+real `MoralInjuryState` and `GameStateStore` attached. Asserts: the real
+actor's claim comes back `truth_delta = 0`, the phantom's comes back
+`truth_delta = 1` — the quiet knife, proven against a real run rather than
+a hand-built fixture — trust/resources land exactly where
+`DebriefConsequences.bill()` predicts, `FABRICATE` bills moral injury, and
+`DebriefScreen.build()` works straight off the resulting ledger. A second,
+more targeted test proves the literal acceptance phrase ("an honest
+As-Seen claim about a phantom comes back false") on its own.
+
+**29 new tests** across 4 new files (`test_claim_reducer.gd` 8,
+`test_debrief_consequences.gd` 6, `test_debrief_screen.gd` 7,
+`test_debrief_pipeline_integration.gd` 2) plus additions to
+`test_debrief_ledger.gd` (+5) and `test_game_state_store.gd` (+1),
+bringing the suite to 644. Clean against `gdlint`/`gdformat --check`/
+`tools/percept_truth_boundary_lint.py`/`tools/content_validator.py`/
+`tools/dlgc.py` locally before commit.
+
+**What's still open:** the plan's own acceptance wording also named "the
+web scene shows the debrief + reveal" — `scenes/main.gd` is untouched this
+pass. The graybox demo has no live combat and no interactive
+claim-submission UI; this pass is the logic/data layer a future
+scene-integration pass binds to, tracked explicitly in
+`docs/forward_dev_plan.md` as open rather than folded into "delivered."
+
+**Files added:** `src/debrief/{claim_reducer,debrief_consequences}.gd`,
+`src/ui/debrief_screen.gd`, `tests/unit/{test_claim_reducer,test_debrief_consequences,test_debrief_screen,test_debrief_pipeline_integration}.gd`.
+
+**Files changed:** `src/debrief/debrief_ledger.gd` (consequence writes),
+`src/core/game_state_store.gd` (new key-paths), `tests/unit/{test_debrief_ledger,test_game_state_store}.gd`,
+`docs/forward_dev_plan.md` (Phase C marked "core logic delivered, scene
+integration open").

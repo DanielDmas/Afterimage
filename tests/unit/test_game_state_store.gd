@@ -19,6 +19,14 @@ func test_default_state_has_current_schema_version() -> void:
 	assert_eq(store.get_value(["campaign", "day"]), 0)
 
 
+## Phase C's debrief consequence channels (docs/forward_dev_plan.md) —
+## DebriefLedger.submit_claim() reads/writes these two key-paths.
+func test_default_state_has_debrief_consequence_channels() -> void:
+	var store := GameStateStore.new()
+	assert_eq(store.get_value(["campaign", "doubek_trust"]), 50)
+	assert_eq(store.get_value(["campaign", "resource_budget"]), 100)
+
+
 func test_get_value_missing_path_returns_null() -> void:
 	var store := GameStateStore.new()
 	assert_null(store.get_value(["campaign", "nonexistent"]))

@@ -61,12 +61,22 @@ func is_submitted(claim_id: String) -> bool:
 ## claims that were grounded or are evidence-backed... a verified claim
 ## can never later be contradicted") — asserting that here rather than
 ## silently downgrading an ineligible claim to a different mode.
+##
+## `game_state`, like `moral_injury`, is optional and caller-supplied
+## (Phase C's consequence channels, docs/forward_dev_plan.md): when given,
+## `DebriefConsequences.bill()`'s trust/resource deltas are written to
+## `["campaign", "doubek_trust"]`/`["campaign", "resource_budget"]`, and a
+## FABRICATE submission writes a discoverable plot flag
+## (`["campaign", "flags", "claim_<id>_fabricated"]`) — the flag itself,
+## not the discovery mechanic §4.10 defers to future work, which has
+## nothing to *find* yet without this write existing first.
 func submit_claim(
 	claim_id: String,
 	mode: HonestyMode,
 	truth_object: String,
 	moral_injury: MoralInjuryState = null,
-	conceals_death: bool = false
+	conceals_death: bool = false,
+	game_state: GameStateStore = null
 ) -> Dictionary:
 	assert(
 		not _submitted_ids.has(claim_id),
@@ -90,7 +100,24 @@ func submit_claim(
 	if mode == HonestyMode.FABRICATE and moral_injury != null:
 		moral_injury.gain_knowing_lie_in_debrief(conceals_death)
 
-	var record: Dictionary = {"claim_id": claim_id, "mode": mode, "truth_delta": truth_delta}
+	var consequence: Dictionary = DebriefConsequences.bill(mode, truth_delta)
+	if game_state != null:
+		var trust: int = int(game_state.get_value(["campaign", "doubek_trust"]))
+		game_state.set_value(["campaign", "doubek_trust"], trust + consequence["trust_delta"])
+		var resources: int = int(game_state.get_value(["campaign", "resource_budget"]))
+		game_state.set_value(
+			["campaign", "resource_budget"], resources + consequence["resource_delta"]
+		)
+		if mode == HonestyMode.FABRICATE:
+			game_state.set_value(["campaign", "flags", "claim_%s_fabricated" % claim_id], true)
+
+	var record: Dictionary = {
+		"claim_id": claim_id,
+		"mode": mode,
+		"truth_delta": truth_delta,
+		"trust_delta": consequence["trust_delta"],
+		"resource_delta": consequence["resource_delta"],
+	}
 	_submissions.append(record)
 	_submitted_ids[claim_id] = true
 	return record
