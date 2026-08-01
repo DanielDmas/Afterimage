@@ -101,19 +101,23 @@ func test_full_pipeline_from_a_mission_run_to_debrief_consequences() -> void:
 		else:
 			phantom_delta = record["truth_delta"]
 
-	# The quiet knife itself: the phantom sighting, submitted honestly
-	# (well — FABRICATE here so the moral-injury channel gets exercised
-	# too; see below), comes back false. The real actor's sighting comes
-	# back true. Both were drafted through the exact same reduction code.
+	# The quiet knife itself: the phantom sighting, submitted as FABRICATE
+	# (so the moral-injury channel gets exercised too), comes back false.
+	# The real actor's sighting, submitted AS_SEEN, comes back true. Both
+	# were drafted through the exact same reduction code.
 	assert_eq(real_delta, 0)
 	assert_eq(phantom_delta, 1)
 
 	# FABRICATE billed moral injury (existing DebriefLedger behavior).
 	assert_true(moral_injury.value_fx() > 0)
 
-	# Both submissions were FABRICATE, so trust only ever moved by
-	# DebriefConsequences.FABRICATE_TRUST, twice.
-	var expected_trust: int = starting_trust + 2 * DebriefConsequences.FABRICATE_TRUST
+	# One AS_SEEN-true submission (the real actor) plus one FABRICATE
+	# submission (the phantom) — not two of the same mode.
+	var expected_trust: int = (
+		starting_trust
+		+ DebriefConsequences.AS_SEEN_TRUE_TRUST
+		+ DebriefConsequences.FABRICATE_TRUST
+	)
 	assert_eq(int(game_state.get_value(["campaign", "doubek_trust"])), expected_trust)
 	assert_eq(int(game_state.get_value(["campaign", "resource_budget"])), starting_resources)
 

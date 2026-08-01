@@ -1356,3 +1356,29 @@ scene-integration pass binds to, tracked explicitly in
 `src/core/game_state_store.gd` (new key-paths), `tests/unit/{test_debrief_ledger,test_game_state_store}.gd`,
 `docs/forward_dev_plan.md` (Phase C marked "core logic delivered, scene
 integration open").
+
+**Post-push CI: one real bug, and it was in the test, not the production
+code.** First push (`930bf7a`) came back **644/644 ran, 1 failed** — the
+good news first: every one of the new GDScript patterns this pass took on
+faith without a local Godot binary (a static function parameter typed as
+another class's enum, `DebriefConsequences.bill(mode: DebriefLedger.HonestyMode, ...)`;
+a `const Array[DebriefLedger.HonestyMode]` in `DebriefScreen`) compiled
+and ran cleanly — no parse errors, confirming those cross-file
+enum-typing patterns are safe. The one failure:
+`test_full_pipeline_from_a_mission_run_to_debrief_consequences` —
+`assert_eq failed: expected <44>, got <49>`.
+
+**Root cause:** the test's own comment said "Both submissions were
+FABRICATE," but the test's actual loop submits the real actor's claim as
+`AS_SEEN` and only the phantom's as `FABRICATE` (`mode = FABRICATE if not
+is_real else AS_SEEN`) — the comment described a test that was never
+written. The real math: `AS_SEEN` true (+2) plus `FABRICATE` (−3) = −1,
+landing at `50 − 1 = 49`, exactly what CI reported. The hand-computed
+"expected" value (`2 × FABRICATE_TRUST` = −6, landing at 44) was simply
+wrong arithmetic against the test's own code, not a defect in
+`DebriefConsequences.bill()` or `DebriefLedger.submit_claim()` — both of
+which had already been proven correct in isolation by
+`test_debrief_consequences.gd`'s worked examples, all of which passed on
+the very same run. Fixed by correcting the expected-value formula to
+match what the test's loop actually submits
+(`AS_SEEN_TRUE_TRUST + FABRICATE_TRUST`), not the production code.
