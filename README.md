@@ -36,6 +36,16 @@ godot --headless --path . --script res://tests/run_tests.gd
 
 ## The document set
 
+**Start here** — three orientation documents that summarize the rest:
+
+| Document | What it's for |
+|---|---|
+| [`docs/GAME.md`](docs/GAME.md) | **The game explained:** the truth/percept conceit, every system, the story, the loop, and what's actually playable today |
+| [`PROGRESS.md`](PROGRESS.md) | **Everything built so far**, in order, with how each piece was verified — the map into `dev_log.md` |
+| [`CLAUDE.md`](CLAUDE.md) | **Repository guide & continuation handbook:** layout, binding rules, the dev environment's real limits, the traps that have actually bitten this project, and where to pick up next. Written for an AI agent or a human joining cold |
+
+The full, authoritative document set those summarize:
+
 | Document | What it governs |
 |---|---|
 | [`docs/master_plan.md`](docs/master_plan.md) | The master development plan: design pillars, story bible, all systems (distortions, mind model, combat, debrief), architecture, milestones M0–M7, testing, risks |
@@ -49,7 +59,7 @@ godot --headless --path . --script res://tests/run_tests.gd
 | [`docs/review_and_forward_plan.md`](docs/review_and_forward_plan.md) | Post-arc code review: the F1–F13 blank-spot findings (most now closed) between individually-green systems |
 | [`docs/forward_dev_plan.md`](docs/forward_dev_plan.md) | **The living forward plan (v2):** the north-star playable-loop goal and the in-sandbox-buildable phases (A–G) toward it, with an explicit blocked-list |
 
-Reading order for a newcomer: this README → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed. For "what's next," read `forward_dev_plan.md`. (`story_bible.md` spoils the entire game — read deliberately.)
+Reading order for a newcomer: this README → [`docs/GAME.md`](docs/GAME.md) → [`PROGRESS.md`](PROGRESS.md) → `master_plan.md` §0–§3 → `ux_charter.md` → the rest as needed. If you're going to *work* on the repo, read [`CLAUDE.md`](CLAUDE.md) first. For "what's next," read `forward_dev_plan.md`. (`story_bible.md` spoils the entire game — read deliberately.)
 
 ## Ground rules (from the plans, binding)
 1. **Determinism is law** — the truth simulation replays tick-perfect, always (it's the save format, the bug report, and the Afterimage Theater).
