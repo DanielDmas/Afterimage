@@ -1073,3 +1073,38 @@ recorded on the real deployed build. **The procedural audio pass is
 confirmed working live**, matching this session's standing rule that a
 feature isn't verified until it's been observed running, not just
 reasoned about.
+
+---
+
+## Post-release: a directional objective indicator (Interlude backlog item 2)
+
+The HUD has said "reach the teal door, bottom-right" in text since Stage
+3 — fine standing still, slower to read mid-exploration than a real
+compass arrow would be. Delivered in `scenes/main.gd`: a small `Polygon2D`
+triangle, anchored at a fixed HUD point (`OBJECTIVE_ARROW_ANCHOR_PX =
+(600, 18)`, clear of both the room's rendered extent — which ends at
+x=560 — and every HUD text label), drawn in `_EXIT_COLOR` (`club_teal`,
+the exit door's own color) so the visual language reads as "this points
+at that," re-rotated every `_update_visuals()` tick.
+
+**The one API fact worth verifying before use:** `Vector2.angle()`.
+Checked against the real 4.3 docs rather than assumed — it's exactly
+`atan2(y, x)`, confirmed by the docs' own worked examples
+(`Vector2.RIGHT.angle() == 0`, `Vector2.DOWN.angle() == PI/2`). The
+arrow's polygon is authored pointing along local +X by design
+(`OBJECTIVE_ARROW_POINTS`'s tip at `Vector2(9, 0)`), specifically so
+`rotation = (EXIT_POSITION_MM - player_position).angle()` aligns it
+correctly with no offset correction needed — the "up" direction Y-flip
+question that trips up naive compass-arrow code never comes up here
+because both `Vector2.angle()`'s convention and this codebase's own
+`_mm_to_px()` (a uniform positive scale, no axis flip) already agree.
+
+**Verification:** clean against `gdlint`/`gdformat --check`/
+`tools/percept_truth_boundary_lint.py`/`tools/content_validator.py`/
+`tools/dlgc.py` locally before commit. Same "no direct unit-test
+coverage, verified by playing the deployed build" discipline as every
+other `scenes/main.gd`-only change this session.
+
+**Files changed:** `scenes/main.gd` (`OBJECTIVE_ARROW_*` consts, the
+`_objective_arrow` node, and its per-tick rotation update);
+`docs/forward_dev_plan.md` (Interlude backlog item 2 marked delivered).

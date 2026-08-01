@@ -62,6 +62,17 @@ const EXIT_RADIUS_MM: int = 400
 const GROUND_VIGNETTE_MAX_ALPHA: float = 0.35
 const PHANTOM_DISSOLVE_SECONDS: float = 1.0  # master_plan.md §4.2: "~1 s"
 
+## The directional objective indicator (forward_dev_plan.md's Interlude
+## backlog item 2): a compass-style arrow, fixed at a screen anchor (not a
+## world position — it isn't part of the room), rotated every frame to
+## point from the player's current position toward EXIT_POSITION_MM. Drawn
+## in club_teal (`_EXIT_COLOR`), the same color as the exit door itself,
+## so the visual language reads as "this points at that."
+const OBJECTIVE_ARROW_ANCHOR_PX: Vector2 = Vector2(600, 18)
+
+## Tip at local +X; Node2D.rotation then aligns +X with the real direction.
+const OBJECTIVE_ARROW_POINTS: PackedVector2Array = [Vector2(9, 0), Vector2(-6, -6), Vector2(-6, 6)]
+
 const MISSION_PACKAGE_PATH: String = "res://content/missions/m00_stub/mission.json"
 const BUDGET_REGRANT_INTERVAL_TICKS: int = 300  # 10s at the fixed 30Hz tick rate
 
@@ -166,6 +177,7 @@ var _subtitle_label: Label
 var _reveal_panel: Control
 var _ground_chime_player: AudioStreamPlayer
 var _distortion_hum_player: AudioStreamPlayer
+var _objective_arrow: Polygon2D
 
 
 func _ready() -> void:
@@ -273,6 +285,12 @@ func _build_hud() -> void:
 	_objective_label.position = Vector2(4, 52)
 	_objective_label.text = "Objective: reach the teal door, bottom-right"
 	add_child(_objective_label)
+
+	_objective_arrow = Polygon2D.new()
+	_objective_arrow.polygon = OBJECTIVE_ARROW_POINTS
+	_objective_arrow.color = _EXIT_COLOR
+	_objective_arrow.position = OBJECTIVE_ARROW_ANCHOR_PX
+	add_child(_objective_arrow)
 
 	_clarity_label = Label.new()
 	_clarity_label.position = Vector2(4, 68)
@@ -547,6 +565,9 @@ func _update_visuals() -> void:
 	var pos_mm: Vector2i = _sim.player_position()
 	_player_sprite.position = _mm_to_px(pos_mm)
 	_tick_label.text = "tick %d   pos (%d, %d) mm" % [_sim.clock.current_tick, pos_mm.x, pos_mm.y]
+
+	var to_exit_mm: Vector2 = Vector2(EXIT_POSITION_MM - pos_mm)
+	_objective_arrow.rotation = to_exit_mm.angle()
 	_ground_label.text = (
 		"[Space] hold to Ground — resolved %d" % _ground_completions
 		if not _sim.is_grounding()
