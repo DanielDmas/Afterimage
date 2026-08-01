@@ -1014,3 +1014,62 @@ build, matching the precedent the wall-slide fix set two passes ago.
 **Files changed:** `scenes/main.gd` (`_build_audio()` and four static
 helpers, HUD-audio wiring); `docs/forward_dev_plan.md` (Interlude backlog
 item 3 marked delivered).
+
+**Confirmed green** ([PR #6](https://github.com/DanielDmas/Afterimage/pull/6),
+merge commit `82d6960`): `gdlint`/`gdformat --check` and the unit test suite
+all passed on GitHub's own infrastructure, log text read `ALL PASSED
+(615/615)` — same count as before, since `scenes/main.gd` has no direct
+unit tests (see above); this pass added zero new test cases, only new
+scene code. The Web export build and Pages deploy both succeeded.
+
+---
+
+## Post-release: confirming the procedural audio actually plays, live
+
+Passing the audio API's own doc-verification isn't the same claim as "it
+plays correctly" — this session's own precedent (the wall-slide bug, found
+only by actually playing the deployed build) says not to assume the second
+from the first. Re-ran the same headless-Chromium-over-loopback rig used
+for that fix against the freshly redeployed build (`index.pck` grew from
+404016 to 412624 bytes, confirming the fresh content landed).
+
+Headless Chromium still runs the real Web Audio API even with no physical
+output device, so the check doesn't have to rely on visual inspection
+alone: an init script wraps `AudioNode.prototype.connect` to detect the
+moment the engine's real output node connects to `AudioContext.destination`,
+mirrors that signal through an `AnalyserNode` (without altering the real
+output path), and polls `getFloatTimeDomainData()` for RMS energy every
+100ms — a live loudness trace of whatever the engine is actually
+synthesizing, sampled from outside the engine entirely.
+
+**What the trace showed, matched tick-for-tick against the sim's own math:**
+- A steady ~0.04–0.06 RMS tone from shortly after boot through the whole
+  pre-Ground window — consistent with `DISTORTION_HUM_VOLUME_DB = -22dB`'s
+  predicted amplitude (a sine at that gain, RMS'd, lands almost exactly
+  there). A screenshot taken in this same window shows "reality feels off
+  right now" actually on screen (plus a live `SubtitleDrift` fake line) —
+  the hum and its visual twin are confirmed on together, not just both
+  independently plausible.
+- Holding Ground (Space) for 3s starting at t=18112ms: the steady tone
+  continues until a **louder transient spike (0.193, then 0.097 RMS)**
+  appears at t≈20689–20807ms — almost exactly 2.5s after the hold started
+  (`GroundState.DURATION_TICKS` = 75 ticks at 30Hz = 2.500s), i.e. the
+  chime firing at the exact tick Ground actually resolves, not a guess.
+- Immediately after, RMS drops to **exactly 0** for the rest of the
+  session (12s of walking) — Ground resolution clears every active op
+  (`MissionRuntime.step()`'s ground-completion branch, confirmed by code
+  since Phase B), so the hum has nothing left to sustain it; a screenshot
+  right after shows the Ground counter reading "resolved 1" and the
+  Clarity line correctly blank. No new op happened to purchase again
+  before the session ended, so continued silence here is the *correct*
+  outcome, not a bug.
+- Zero `pageerror`s across the whole run.
+
+This is a materially stronger confirmation than "the API call is
+documented correctly" — it's the actual synthesized waveform's energy,
+sampled from outside the engine, lining up exactly with the sim's own
+tick-based Ground-duration math and the Director's op-lifecycle rules,
+recorded on the real deployed build. **The procedural audio pass is
+confirmed working live**, matching this session's standing rule that a
+feature isn't verified until it's been observed running, not just
+reasoned about.
