@@ -895,3 +895,65 @@ build: content survives into the exported PCK, the full MissionRuntime/
 DistortionDirector/OpFactory pipeline runs live, the Ground verb resolves live,
 the wall-slide fix works live, and the Afterimage + ReplayTheater path runs
 live — all confirmed by actually playing the public build, not by assumption.
+
+---
+
+## Post-release: Phase B's last open item closed — a full-pipeline determinism corpus
+
+`docs/forward_dev_plan.md`'s own Phase B section named exactly one thing still
+open after everything else landed: "a determinism-corpus fixture for a full
+MissionRuntime-driven run." `test_determinism_corpus.gd`/`TruthSimDigest` only
+ever proved the truth layer alone re-simulates hash-identical; nothing proved
+the same guarantee survives once `MissionRuntime`/`DistortionDirector`/
+`MindModelEventBridge` are wired on top of it — the exact pipeline the live
+scene (and the deployed build just verified by playing it) actually runs.
+
+**`tests/fixtures/mission_runtime_digest.gd`** (`MissionRuntimeDigest`, new) —
+built by direct analogy to `TruthSimDigest`, reusing its own graybox-room
+construction (an independent copy, not an import, matching that class's own
+"a test fixture depending on the playable scene would be backwards" reasoning)
+and its own "explicit hand-formatted state string, not `JSON.stringify()` on a
+Vector2i-bearing Dictionary" discipline. Re-simulates every frame of a
+`ReplayLog` through a real `TruthSim` + `MissionRuntime` (with a real
+`MindModelEventBridge` kept alive the whole run, and a real budget re-grant
+every `BUDGET_REGRANT_INTERVAL_TICKS` mirroring `scenes/main.gd`'s own policy),
+then hashes the combined truth state *and* the Director's entire purchase log
+*and* whichever ops are still active at the end. `replay.run_seed` doubles as
+the Director's own seed — extending `ReplayLog`'s existing "this value IS the
+deterministic seed for this recorded run" contract from the truth layer to the
+percept layer's purchase decisions, rather than inventing a second seed field
+the corpus JSON format would need to carry.
+
+Deliberately reuses the real, already-committed `content/missions/m00_stub/
+mission.json` (via `MissionLoader`) rather than a synthetic deck — the same
+"prove it against real content" choice `test_mission_runtime.gd`'s own
+real-content test already made, and it costs nothing here: this is a
+self-consistency check (replay the same recorded run twice, the digest must
+match), never a pinned expected value, so it can never go fragile against a
+future content edit to that mission file.
+
+**`tests/unit/test_mission_runtime_determinism_corpus.gd`** (new, 4 tests)
+reuses the exact same three `tests/corpus/*.json` fixtures
+`test_determinism_corpus.gd` already exercises (pure recorded InputFrame
+streams, agnostic to which digest function processes them) rather than
+authoring new ones — `run_003.json`'s full Ground-hold-to-completion cycle is
+exactly the scenario that exercises `MissionRuntime`'s ground-resolution
+branch (every active op cleared, the Director notified) for real, not just
+plain movement. Proves: replaying a fixture twice yields identical digests;
+the three fixtures produce three distinct digests (rules out a digest
+function that's accidentally content-insensitive); the digest is sensitive to
+the Director seed specifically (two runs, identical frames, different
+`run_seed`); and the digest is a well-formed lowercase SHA-256 hex string.
+
+This closes Phase B's very last open acceptance item — every criterion the
+plan named is now delivered, not partially.
+
+**4 new tests**, bringing the suite to **615**. Clean against
+`gdlint`/`gdformat --check`/`tools/percept_truth_boundary_lint.py`/
+`tools/content_validator.py`/`tools/dlgc.py` locally before commit.
+
+**Files added:** `tests/fixtures/mission_runtime_digest.gd`,
+`tests/unit/test_mission_runtime_determinism_corpus.gd`.
+
+**Files changed:** `docs/forward_dev_plan.md` (Phase B marked "FULLY
+DELIVERED", the last open acceptance item closed out).
