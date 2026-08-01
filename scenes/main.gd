@@ -62,6 +62,15 @@ const EXIT_RADIUS_MM: int = 400
 const GROUND_VIGNETTE_MAX_ALPHA: float = 0.35
 const PHANTOM_DISSOLVE_SECONDS: float = 1.0  # master_plan.md §4.2: "~1 s"
 
+## Interlude backlog item 6: a shareable export of the reveal panel —
+## master_plan.md's own marketing beat ("shareable honesty reports").
+## Only reachable while the reveal panel is up (_session_ended), same as
+## "restart" — see _export_reveal_image()'s own doc for the platform-
+## safety reasoning behind reaching JavaScriptBridge through
+## Engine.has_singleton()/get_singleton() rather than a static type name.
+const REVEAL_EXPORT_FILENAME: String = "afterimage_reveal.png"
+const REVEAL_EXPORT_MIME: String = "image/png"
+
 ## The directional objective indicator (forward_dev_plan.md's Interlude
 ## backlog item 2): a compass-style arrow, fixed at a screen anchor (not a
 ## world position — it isn't part of the room), rotated every frame to
@@ -209,6 +218,7 @@ func _bind_input_keys() -> void:
 	_bind_action_key("sprint", [KEY_SHIFT])
 	_bind_action_key("ground", [KEY_SPACE])
 	_bind_action_key("restart", [KEY_ENTER])
+	_bind_action_key("export_reveal", [KEY_E])
 
 
 static func _bind_action_key(action: String, keycodes: Array) -> void:
@@ -476,6 +486,8 @@ func _physics_process(delta: float) -> void:
 	if _session_ended:
 		if Input.is_action_just_pressed("restart"):
 			_start_new_session()
+		elif Input.is_action_just_pressed("export_reveal"):
+			_export_reveal_image()
 		return
 	_tick_accumulator += delta
 	while _tick_accumulator >= TICK_SECONDS:
@@ -716,7 +728,7 @@ func _show_reveal_panel() -> void:
 		)
 	)
 	lines.append("")
-	lines.append("Press ENTER to walk it again.")
+	lines.append("Press ENTER to walk it again.  ·  Press E to save a shareable image.")
 
 	var text_label := Label.new()
 	text_label.position = Vector2(24, 40)
@@ -725,6 +737,38 @@ func _show_reveal_panel() -> void:
 	text_label.add_theme_color_override("font_color", _PANEL_TEXT_COLOR)
 	text_label.text = "\n".join(lines)
 	_reveal_panel.add_child(text_label)
+
+
+## Interlude backlog item 6 (docs/forward_dev_plan.md): master_plan.md's
+## own marketing beat, "shareable honesty reports" — captures the whole
+## viewport (the reveal panel is a translucent overlay over the room,
+## exactly what's on screen right now) as a PNG and triggers a real
+## browser download. `RenderingServer.frame_post_draw` is awaited first —
+## verified against the real docs: `Viewport.get_texture()`'s own warning
+## says the texture "might be completely black or outdated if used too
+## early," and this is called from an input event, not `_ready()`, but
+## the caution costs nothing and removes the question entirely.
+##
+## Reached through `Engine.has_singleton("JavaScriptBridge")` /
+## `get_singleton()` rather than a static `JavaScriptBridge` type
+## reference: verified against the real docs that this singleton is
+## "implemented only in the Web export" (this project's only export
+## target, export-web.yml) — a bare `JavaScriptBridge.download_buffer(...)`
+## would still have to *parse* on every platform this script gets loaded
+## on, including the headless-Godot-on-Linux unit-test CI job, and
+## whether that singleton's class name resolves there at all when the
+## editor isn't targeting Web is exactly the kind of cross-platform
+## assumption Pass 6's `Lean.Side` bug (dev_log) taught this codebase not
+## to take on faith. `has_singleton()` sidesteps the question entirely by
+## never writing the type name as a static reference.
+func _export_reveal_image() -> void:
+	if not Engine.has_singleton("JavaScriptBridge"):
+		return
+	await RenderingServer.frame_post_draw
+	var image: Image = get_viewport().get_texture().get_image()
+	var png_bytes: PackedByteArray = image.save_png_to_buffer()
+	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+	bridge.call("download_buffer", png_bytes, REVEAL_EXPORT_FILENAME, REVEAL_EXPORT_MIME)
 
 
 ## MissionRuntime clears its *entire* active_ops list on every Ground
