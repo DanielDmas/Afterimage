@@ -1108,3 +1108,27 @@ other `scenes/main.gd`-only change this session.
 **Files changed:** `scenes/main.gd` (`OBJECTIVE_ARROW_*` consts, the
 `_objective_arrow` node, and its per-tick rotation update);
 `docs/forward_dev_plan.md` (Interlude backlog item 2 marked delivered).
+
+**Confirmed green** ([PR #8](https://github.com/DanielDmas/Afterimage/pull/8),
+merge commit `ce0ba92`): both CI jobs and the Web export build succeeded.
+
+**Confirmed live**, same headless-Chromium-over-loopback rig as every other
+`scenes/main.gd` change this session, against the freshly redeployed build
+(`index.pck` grew to 413136 bytes): three screenshots at three player
+positions, each matching the predicted geometry exactly —
+1. At the start (player `(3000,2000)`, exit `(5600,3600)`): arrow visibly
+   tilted down-and-right, matching the ~32° angle `atan2(1600,2600)` predicts.
+2. After walking to the top-left corner (`(251,251)`): arrow at
+   essentially the same tilt — expected, since `atan2(3349,5349)` (~32°)
+   is nearly identical to the start angle, the diagonal walk having barely
+   changed the ratio.
+3. After walking straight down past the exit's own Y (`(251,3749)`, i.e.
+   149mm *below* the exit): the arrow visibly flattens to almost exactly
+   horizontal — exactly what `atan2(-149,5349)` (~-1.6°) predicts, since
+   the exit is now nearly due right of the player instead of down-right.
+
+The arrow rotating exactly where the geometry says it should, at three
+different player positions on the real deployed build, is stronger
+confirmation than the API being correctly called — it's the actual
+on-screen behavior matching hand-computed angles, not assumed from the
+code alone. Zero `pageerror`s throughout.
