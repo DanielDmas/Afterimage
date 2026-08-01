@@ -766,3 +766,21 @@ Not built this pass, deliberately, with reasons recorded in `docs/forward_dev_pl
 **Files deleted:** `src/integration/drift_encounter.gd`, `src/integration/phantom_encounter.gd`, `tests/unit/test_drift_encounter.gd`, `tests/unit/test_phantom_encounter.gd`.
 
 **Confirmed green (commit `3b47835`):** `ci.yml` run [29983567755](https://github.com/DanielDmas/Afterimage/actions/runs/29983567755) — both jobs `success`; test log shows the literal `ALL PASSED (609/609)` with zero `[FAIL]` lines, and the "Import project" step parsed the fully-rewired `scenes/main.gd` cleanly. `export-web.yml` run [29983567771](https://github.com/DanielDmas/Afterimage/actions/runs/29983567771) — the actual **"Build HTML5/Web export" job succeeded**, the real signal for a scene-script rewrite this size; only the separate "Deploy to GitHub Pages" job failed, the same pre-existing, owner-only-fixable Pages-not-enabled condition recorded since the first export pass — not a regression.
+
+---
+
+## Release: merged to `main` (PR #1)
+
+Everything above shipped. The branch that carried the entire project — the ratified document set, the 20-pass engineering arc, the post-arc review and its fixes, forward-plan Phases A and B — was merged to `main` as a **merge commit** (`fadde58`), deliberately not a squash: this log references individual commit SHAs throughout (`eaf9e73`, `9b34792`, `6dea680`, `4c1fc6b`, `8310212`, `3b47835`), and squashing would have quietly turned every one of those into a dangling reference.
+
+78 commits, 211 files. `README.md` was rewritten first so the front door matches reality: it had still described a pre-playable project with 529 tests, and now leads with the fact that there is a real runnable slice, adds a *Playing it* section (controls, what to actually do, local and browser routes), and states precisely which distortion classes can and cannot reach the player's senses in the graybox room.
+
+**Verified on `main` itself, not just on the branch:** `ci.yml` run [30686824220](https://github.com/DanielDmas/Afterimage/actions/runs/30686824220) — both jobs `success`, test log shows the literal `ALL PASSED (609/609)` with zero `[FAIL]` lines. `export-web.yml` run [30686824248](https://github.com/DanielDmas/Afterimage/actions/runs/30686824248) — **"Build HTML5/Web export" succeeded**, so the merged default branch really does produce a Web build. The PR's own checks were green before merging too (both the PR-triggered and push-triggered CI runs).
+
+**Two things remain that no amount of engineering in this sandbox can do**, recorded here so they aren't mistaken for oversights:
+1. **GitHub Pages is still not enabled.** The build job succeeds on every push and uploads a Pages artifact; the deploy job then fails because the repository has no Pages source configured. That is a repo-settings toggle (Settings → Pages → Source: **GitHub Actions**), owner-only, unreachable from CI or from any tool available here. Until it's flipped, the playable build is downloadable as a workflow artifact — the README documents that route, including the fact that it must be served over HTTP rather than opened from `file://`.
+2. **The repository has no license.** Deliberately not chosen here: it is an ownership decision, not an engineering one.
+
+Also still true and still worth stating plainly: whether `content/*.json` survives into an *exported* Web build's PCK has never been runtime-exercised — the export job proves the build completes, not that a running instance can `FileAccess.open()` a bundled mission file. `export_presets.cfg` uses `export_filter="all_resources"` with empty include/exclude filters, which is standard Godot behavior and should cover it, but there is no browser automation in this sandbox to click through an exported build and confirm it firsthand. First real browser playtest should check that before anything else.
+
+**Next:** `docs/forward_dev_plan.md` Phases C–G, starting with C (the debrief loop — `ClaimReducer`, consequence channels through `GameStateStore`, a `DebriefScreen` data class). The one acceptance item still open from Phase B is a determinism-corpus fixture for a full `MissionRuntime`-driven run.
